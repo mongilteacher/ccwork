@@ -22,11 +22,18 @@
       "updatedAt": "2024-01-03T00:00:00.000Z"
     },
     {
-      "title": "내일의 하루는?",
-      "content": "아침부터 일찍 일어나고 나서 고민하자.",
-      "createdAt": "2026-03-23T13:57:30.308Z",
-      "updatedAt": "2026-03-23T13:57:30.308Z",
-      "id": "dP_NPYuHV94"
+      "title": "ㅇㅅㅇ",
+      "content": "ㅇㅅㅇ",
+      "createdAt": "2026-07-20T07:06:58.087Z",
+      "updatedAt": "2026-07-20T07:07:57.489Z",
+      "id": "30RT-MqSZXQ"
+    },
+    {
+      "title": "ㅈ3",
+      "content": "ㄷㄷ",
+      "createdAt": "2026-07-20T07:08:12.003Z",
+      "updatedAt": "2026-07-20T07:08:12.003Z",
+      "id": "aMDQTrwAZH4"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

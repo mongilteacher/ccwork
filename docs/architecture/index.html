@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Notes App · 아키텍처</title>
+    <style>
+      :root {
+        --bg: #fbfbfa;
+        --card: #ffffff;
+        --fg: #1a1a18;
+        --muted: #6b6b66;
+        --border: #e6e4e0;
+        --accent: #2f6f4e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #17171a;
+          --card: #1f1f23;
+          --fg: #ececea;
+          --muted: #9a9a94;
+          --border: #33333a;
+          --accent: #7fc4a0;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 3rem 1.5rem 5rem;
+        background: var(--bg);
+        color: var(--fg);
+        font-family:
+          Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      header.page {
+        margin-bottom: 3rem;
+      }
+      h1 {
+        font-size: 2rem;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.02em;
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin: 0 0 0.35rem;
+        letter-spacing: -0.01em;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+      }
+      .caption {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin: 0 0 1.25rem;
+      }
+      .caption strong {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      pre.mermaid {
+        margin: 0;
+        text-align: center;
+        overflow-x: auto;
+        background: transparent;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      td code,
+      li code,
+      p code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.85em;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 0.08em 0.35em;
+      }
+      ul.legend {
+        list-style: none;
+        padding: 0;
+        margin: 1.25rem 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.5rem;
+        font-size: 0.85rem;
+        color: var(--muted);
+        border-top: 1px solid var(--border);
+        padding-top: 1rem;
+      }
+      ul.legend b {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .note {
+        border-left: 3px solid var(--accent);
+        padding: 0.15rem 0 0.15rem 0.9rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+      footer {
+        color: var(--muted);
+        font-size: 0.8rem;
+        text-align: center;
+        margin-top: 2.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="page">
+        <h1>Notes App 아키텍처</h1>
+        <p class="sub">React 19 · TypeScript · Vite · Context API · json-server</p>
+      </header>
+
+      <section>
+        <h2>1. 컴포넌트 의존성 그래프</h2>
+        <p class="caption">
+          이 앱의 핵심은 <strong>렌더 트리와 데이터 의존성이 서로 다르다</strong>는 점입니다.
+          <code>NoteList</code>·<code>NoteEditor</code>는 <code>App</code> → <code>Layout</code>을
+          거쳐 렌더되지만(실선), 데이터는 <code>useNotes()</code>로
+          <code>NotesProvider</code>에서 직접 당겨옵니다(점선). props로는 선택 상태와 콜백만
+          내려갑니다.
+        </p>
+        <pre class="mermaid">
+graph TD
+  subgraph entry["진입점"]
+    main["main.tsx<br/>createRoot · StrictMode"]
+  end
+
+  subgraph ui["UI 계층 · src/components/"]
+    App["App.tsx<br/>selectedNoteId · isCreating"]
+    Layout["Layout.tsx<br/>sidebar / main slot"]
+    NoteList["NoteList.tsx"]
+    NoteItem["NoteItem.tsx"]
+    NoteEditor["NoteEditor.tsx<br/>title · content · saving"]
+  end
+
+  subgraph state["상태 계층 · src/context/"]
+    Provider["NotesContext.tsx<br/>notes · loading · error"]
+  end
+
+  subgraph apilayer["API 계층 · src/api/"]
+    API["notes.ts<br/>fetch / create / update / delete"]
+  end
+
+  subgraph ext["외부"]
+    Server[("json-server :3001<br/>db.json")]
+  end
+
+  main --> App
+  App --> Provider
+  Provider --> Layout
+  Layout -->|"sidebar prop"| NoteList
+  Layout -->|"main prop"| NoteEditor
+  NoteList -->|"note · isSelected<br/>onSelect · onDelete"| NoteItem
+
+  NoteList -.->|"useNotes()<br/>notes · loading · error · deleteNote"| Provider
+  NoteEditor -.->|"useNotes()<br/>notes · createNote · updateNote"| Provider
+
+  Provider -->|"import * as api"| API
+  API ==>|"fetch"| Server
+</pre>
+        <ul class="legend">
+          <li><b>──▶ 실선</b> 렌더 · import</li>
+          <li><b>┈┈▶ 점선</b> <code>useNotes()</code> 상태 소비</li>
+          <li><b>══▶ 굵은 선</b> 네트워크 경계</li>
+        </ul>
+        <p class="note">
+          <code>NoteItem</code>만 Context를 소비하지 않습니다 — 필요한 모든 것을 props로 받는 순수
+          표시 컴포넌트입니다. 새 컴포넌트를 만들 때 참고할 기준점입니다.
+        </p>
+      </section>
+
+      <section>
+        <h2>2. 타입 의존성</h2>
+        <p class="caption">
+          <code>Note</code>는 <strong>단일 정의</strong>이며 세 계층이 공유합니다. 스키마를 바꾸면
+          이 타입 → api → <code>db.json</code> 순서로 함께 맞춰야 합니다.
+        </p>
+        <pre class="mermaid">
+graph LR
+  Types["types/note.ts<br/>interface Note"]
+  API2["api/notes.ts"]
+  Ctx2["context/NotesContext.tsx"]
+  Item2["components/NoteItem.tsx"]
+
+  API2 --> Types
+  Ctx2 --> Types
+  Item2 --> Types
+        </pre>
+      </section>
+
+      <section>
+        <h2>3. 상태 흐름 — 노트 저장 1회 왕복</h2>
+        <p class="caption">
+          mutation은 <strong>api 호출 성공 후 로컬 배열만 갱신</strong>하고 재fetch하지 않습니다.
+          타임스탬프는 서버가 아니라 <strong>api 계층에서 주입</strong>됩니다. 실패 시 api가 던진
+          에러를 Context는 잡지 않고 그대로 전파하며, 컴포넌트가
+          <code>console.error</code>로만 처리합니다.
+        </p>
+        <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as 사용자
+  participant E as NoteEditor
+  participant C as NotesContext
+  participant A as api/notes.ts
+  participant S as json-server
+
+  U->>E: 저장 클릭
+  E->>E: title.trim() 검사
+  E->>E: setSaving(true)
+  E->>C: createNote(title, content)
+  C->>A: api.createNote({ title, content })
+  A->>A: createdAt · updatedAt 주입
+  A->>S: POST /notes
+
+  alt res.ok
+    S-->>A: 201 + Note
+    A-->>C: Note
+    C->>C: setNotes(prev => [...prev, newNote])
+    C-->>E: resolve
+    E->>E: onDone()
+    C-->>U: 목록 리렌더
+  else 실패
+    S-->>A: 4xx / 5xx
+    A-->>C: throw Error('Failed to create note')
+    C-->>E: reject (잡지 않고 전파)
+    E->>E: console.error(e)
+  end
+
+  E->>E: setSaving(false)
+        </pre>
+        <p class="note">
+          현재 실패 경로는 콘솔에만 기록되고 화면에는 아무 변화가 없습니다. 사용자에게는 "저장이
+          안 됐다"는 신호가 전혀 없다는 점을 유의하세요.
+        </p>
+      </section>
+
+      <section>
+        <h2>4. 초기 로드 흐름</h2>
+        <p class="caption">
+          mutation과 달리 <strong>초기 로드 실패만</strong> Context가 <code>error</code> state로
+          흡수해 화면에 렌더합니다. <code>NoteList</code>는 이 세 상태를 early return으로 분기합니다.
+        </p>
+        <pre class="mermaid">
+graph LR
+  Mount["NotesProvider 마운트<br/>loading = true"] --> Fetch["api.fetchNotes()"]
+  Fetch -->|성공| Set["setNotes(data)"]
+  Fetch -->|실패| Err["setError(e.message)"]
+  Set --> Fin["finally: setLoading(false)"]
+  Err --> Fin
+  Fin --> Render{"NoteList 분기"}
+  Render -->|loading| L["로딩 중..."]
+  Render -->|error| E2["오류: ..."]
+  Render -->|"length === 0"| Z["노트가 없습니다"]
+  Render -->|그 외| List["NoteItem 목록"]
+        </pre>
+      </section>
+
+      <section>
+        <h2>5. state 소유권</h2>
+        <p class="caption">
+          서버 데이터는 <strong>오직 Context만</strong> 소유합니다. 컴포넌트 로컬 state는 UI 전용
+          (폼 입력값, 제출 중 플래그, 선택 상태)뿐입니다.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>소유자</th>
+              <th>state</th>
+              <th>성격</th>
+              <th>소비처</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>NotesContext</code></td>
+              <td><code>notes</code></td>
+              <td>서버 데이터</td>
+              <td><code>NoteList</code>, <code>NoteEditor</code></td>
+            </tr>
+            <tr>
+              <td><code>NotesContext</code></td>
+              <td><code>loading</code> · <code>error</code></td>
+              <td>초기 로드 상태</td>
+              <td><code>NoteList</code></td>
+            </tr>
+            <tr>
+              <td><code>App</code></td>
+              <td><code>selectedNoteId</code></td>
+              <td>선택 상태</td>
+              <td>props → <code>NoteList</code>, <code>NoteEditor</code></td>
+            </tr>
+            <tr>
+              <td><code>App</code></td>
+              <td><code>isCreating</code></td>
+              <td>모드 분기</td>
+              <td>props → <code>NoteEditor</code></td>
+            </tr>
+            <tr>
+              <td><code>NoteEditor</code></td>
+              <td><code>title</code> · <code>content</code></td>
+              <td>폼 입력값</td>
+              <td>자기 자신</td>
+            </tr>
+            <tr>
+              <td><code>NoteEditor</code></td>
+              <td><code>saving</code></td>
+              <td>제출 중 플래그</td>
+              <td>자기 자신 (버튼 disabled)</td>
+            </tr>
+            <tr>
+              <td><code>NoteItem</code></td>
+              <td>—</td>
+              <td>state 없음</td>
+              <td>순수 표시 컴포넌트</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <footer>
+        커밋 <code>eaac549</code> 기준 · 자동 동기화되지 않습니다 — 컴포넌트를 추가·삭제했다면
+        <code>mermaid-diagram</code> 스킬을 다시 실행하세요.
+      </footer>
+    </main>
+
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+      const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: dark ? 'dark' : 'default',
+        fontFamily: 'Pretendard, -apple-system, sans-serif',
+        flowchart: { curve: 'basis', padding: 16 },
+      });
+    </script>
+  </body>
+</html>

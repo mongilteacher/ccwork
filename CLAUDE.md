@@ -56,7 +56,7 @@ src/components/*    → useNotes()로 상태 소비, UI만 담당
 
 각 문서가 Do/Don't를 자체 보유한다. **규칙 본문을 이 파일에 중복시키지 않는다.**
 
-- 편집 후 `PostToolUse` 훅(`.claude/hooks/design-system-check.sh`)이 `src/**/*.tsx`와 `src/index.css`를 검사해 위반을 보고한다. **경고 전용이라 커밋을 막지 않는다** — 기존 코드가 아직 마이그레이션 이전이라 차단하면 편집이 불가능해지기 때문이다. 로드맵이 끝나면 차단 훅으로 승격할 수 있다.
+- 편집 후 `PostToolUse` 훅(`.claude/hooks/design-system-check.sh`)이 `src/**/*.tsx`와 `src/index.css`를 검사한다. **ratchet 방식이다** — 파일 전체가 아니라 `git diff` 기준 **새로 추가된 줄만** 보고, 거기서 위반이 나오면 차단한다(`exit 2`). 기존 코드의 위반은 통과시키므로 마이그레이션 이전 파일도 자유롭게 편집할 수 있고, 되돌아가는 것만 막힌다. 상태 파일은 없다.
 - 훅이 잡는 것: 원시 Tailwind 색상, arbitrary 그림자·간격, hex 직접 기입, 인라인 `style`, 테두리 사용(No-Line Rule).
 - Tailwind CSS v4를 `@tailwindcss/vite` 플러그인으로 사용. 설정 파일이 아니라 `src/index.css`의 `@theme` 블록에 디자인 토큰을 정의한다.
 - 현재 코드는 구버전 토큰(`bg-card`, `border-border` 등)을 쓰고 있다. **기존 코드를 패턴 참고용으로 복사하지 말 것** — 지금 있는 게 정답이 아니다.

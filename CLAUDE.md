@@ -44,9 +44,23 @@ src/components/*    → useNotes()로 상태 소비, UI만 담당
 
 ### 스타일링
 
+**UI·스타일 작업은 반드시 `design-system` 스킬로 시작한다.** Tailwind 클래스를 쓰거나 고치기 전에, 색상·간격·그림자·테두리·폰트를 정하기 전에, 컴포넌트를 새로 만들기 전에, `src/index.css`의 `@theme`를 건드리기 전에 스킬을 먼저 부른다. 스킬이 [`docs/design-system/`](docs/design-system/README.md)의 정본 규격 중 필요한 문서만 골라 읽어준다.
+
+정본 문서의 구성:
+
+| 문서                                                     | 내용                                                 |
+| -------------------------------------------------------- | ---------------------------------------------------- |
+| [`foundations.md`](docs/design-system/foundations.md)    | 색상·타이포·엘리베이션·스페이싱 토큰 (hex 단일 출처) |
+| [`components/`](docs/design-system/components/README.md) | 버튼·카드/리스트·인풋·Knowledge Token 규격           |
+| [`migration.md`](docs/design-system/migration.md)        | 현재 코드와 정본의 차이 + 적용 로드맵                |
+
+각 문서가 Do/Don't를 자체 보유한다. **규칙 본문을 이 파일에 중복시키지 않는다.**
+
+- 편집 후 `PostToolUse` 훅(`.claude/hooks/design-system-check.sh`)이 `src/**/*.tsx`와 `src/index.css`를 검사해 위반을 보고한다. **경고 전용이라 커밋을 막지 않는다** — 기존 코드가 아직 마이그레이션 이전이라 차단하면 편집이 불가능해지기 때문이다. 로드맵이 끝나면 차단 훅으로 승격할 수 있다.
+- 훅이 잡는 것: 원시 Tailwind 색상, arbitrary 그림자·간격, hex 직접 기입, 인라인 `style`, 테두리 사용(No-Line Rule).
 - Tailwind CSS v4를 `@tailwindcss/vite` 플러그인으로 사용. 설정 파일이 아니라 `src/index.css`의 `@theme` 블록에 디자인 토큰을 정의한다.
-- 색상은 원시 Tailwind 색이 아니라 **시맨틱 토큰**을 쓴다: `bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`, `text-destructive`. 새 UI도 이 토큰으로 맞춰 다크/라이트 일관성을 유지한다.
-- 폰트: 본문 `--font-sans`(Pretendard), 디스플레이 `Boogaloo`. 둥근 모서리(`rounded-2xl`/`3xl`)와 커스텀 그림자가 시각적 시그니처.
+- 현재 코드는 구버전 토큰(`bg-card`, `border-border` 등)을 쓰고 있다. **기존 코드를 패턴 참고용으로 복사하지 말 것** — 지금 있는 게 정답이 아니다.
+- 서체는 본문 `--font-sans`(Pretendard), 로고 전용 `--font-display`(Boogaloo). Stitch 원문의 Inter는 한글 글리프 부재로 **의도적으로 채택하지 않는다**.
 
 ## 구현 패턴
 

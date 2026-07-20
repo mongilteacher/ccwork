@@ -14,6 +14,7 @@ React 19 + TypeScript + Vite 기반의 **노트 앱 실습(강의) 프로젝트*
 | `npm run server`     | json-server만 단독 실행 (API가 없으면 앱이 로딩 상태에 멈춤) |
 | `npm run build`      | `tsc` 타입체크 후 Vite 프로덕션 빌드                         |
 | `npm run lint`       | ESLint 검사 + 자동 수정 (`--fix` 포함되어 있음)              |
+| `npm run typecheck`  | `tsc --noEmit` 타입 검사만 (pre-commit 훅이 실행)            |
 | `npm run format`     | Prettier 전체 포맷                                           |
 | `npm test`           | Vitest 1회 실행                                              |
 | `npm run test:watch` | Vitest watch 모드                                            |
@@ -153,3 +154,57 @@ export function Xxx({ a, b }: XxxProps) {   // 2. 함수 선언 + 구조분해
 - Prettier: 세미콜론 O, 작은따옴표, `tabWidth: 2`, `trailingComma: all`, `printWidth: 100`.
 - TypeScript `strict` + `noUnusedLocals`/`noUnusedParameters` 활성화 — 미사용 변수/파라미터는 빌드 에러다.
 - `Note` 타입은 `src/types/note.ts` 단일 정의. 스키마 변경 시 이 타입 → api → db.json 순서로 함께 맞춘다.
+
+## 커밋 규칙
+
+husky 훅이 커밋마다 자동 검사한다. **규칙을 어기면 커밋이 차단된다.**
+
+### 훅 구성
+
+| 훅           | 실행 내용               | 차단 조건                                     |
+| ------------ | ----------------------- | --------------------------------------------- |
+| `pre-commit` | `npx lint-staged`       | 자동 수정 불가한 ESLint 에러 (미사용 변수 등) |
+| `pre-commit` | `npm run typecheck`     | 타입 에러 (ESLint가 못 잡는 영역)             |
+| `commit-msg` | `npx commitlint --edit` | 메시지 형식 위반                              |
+
+`lint-staged`는 staged 파일에만 동작한다: `*.{ts,tsx}`는 `eslint --fix` → `prettier --write`, `*.{json,css,md,html}`는 `prettier --write`. 자동 수정된 결과는 다시 staging된다. 훅이 실패하면 파일은 **수정 전 상태로 롤백**되므로 반쯤 포맷된 상태가 남지 않는다.
+
+### 메시지 형식
+
+Conventional Commits + **제목·본문 모두 필수**. 설정은 `commitlint.config.mjs`.
+
+```
+<type>: <제목>
+                      ← 빈 줄 필수
+본문 첫째 줄
+본문 둘째 줄           ← 본문은 최소 2줄
+```
+
+- 허용 type: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert`
+- **본문 최소 2줄**은 commitlint 기본 규칙에 없어서 `body-min-lines` 커스텀 플러그인으로 직접 정의했다. 빈 줄은 제외하고 내용이 있는 줄만 센다.
+- `subject-case`는 꺼져 있다 — 한글 제목을 쓰기 때문.
+- `Co-Authored-By:` 같은 트레일러는 body가 아니라 **footer로 파싱**되어 2줄 계산에 포함되지 않는다.
+
+예시:
+
+```
+refactor: NotesContext mutation 네이밍 통일
+
+api 계층과 Context의 동사가 달라 매핑을 외워야 했다.
+add/edit/remove를 create/update/delete로 맞춰 1:1 대응시켰다.
+```
+
+터미널에서는 `-m`을 여러 번 쓰는 방식이 편하다:
+
+```bash
+git commit -m "refactor: NotesContext mutation 네이밍 통일" \
+           -m "api 계층과 Context의 동사가 달라 매핑을 외워야 했다." \
+           -m "add/edit/remove를 create/update/delete로 맞춰 1:1 대응시켰다."
+```
+
+### 주의
+
+- 훅 3단(lint-staged → typecheck → commitlint)이 순차 실행되어 커밋마다 **3~5초** 걸린다.
+- 급할 때는 `git commit --no-verify`로 전체 우회할 수 있다. 다만 강의 실습 중 사소한 커밋에도 본문 2줄이 강제되므로, 답답하면 `body-min-lines`를 `[1, 'always', 2]`(에러 → 경고)로 낮추는 편이 낫다.
+- `commitlint.config.mjs`가 `.js`가 아닌 이유: `package.json`에 `"type": "module"`이 없어 `.js`로 두면 매 실행마다 `MODULE_TYPELESS_PACKAGE_JSON` 경고가 뜬다.
+- `npm test`를 훅에 넣지 말 것. 테스트 파일이 0개라 `vitest run`이 exit 1을 반환해 모든 커밋이 실패한다. 넣으려면 `vitest run --passWithNoTests`를 쓴다.

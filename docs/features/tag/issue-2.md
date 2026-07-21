@@ -66,36 +66,38 @@ TagInput의 계약이 바뀌므로 TAG-1의 `src/components/TagInput.test.tsx`�
 > 형식: `[정상|경계|예외] 대상 — should [기대동작] when [조건]`
 > 1순위 대상은 **도메인 함수 `addTag`**(jsdom 불필요). 훅·컴포넌트·저장 배관이 뒤따른다.
 
+> ✅ = tdd-green으로 통과 확인 (2026-07-21) · 29/29 통과
+
 ### 정상
 
-- `[정상] addTag — should raw를 끝에 추가한 새 배열을 반환한다 when 비어있지 않은 값이다`
-- `[정상] addTag — should 기존 순서를 유지하고 끝에 붙인다 when 이미 태그가 있다`
-- `[정상] useTagInput — should value를 갱신한다 when handleChange가 입력 변경을 받는다`
-- `[정상] useTagInput — should addTag 결과로 onChange를 호출한다 when 값이 있는 상태로 Enter를 누른다`
-- `[정상] useTagInput — should 입력값을 빈 문자열로 비운다 when Enter로 확정한 뒤다`
-- `[정상] TagInput — should 타이핑한 값이 onChange로 확정 전달된다 when 사용자가 입력 후 Enter를 누른다`
-- `[정상] TagInput — should 입력 필드가 비워진다 when Enter로 확정한 뒤다`
-- `[정상] TagInput — should 입력 필드에 포커스가 유지된다 when Enter로 확정한 뒤다`
-- `[정상] NoteEditor 저장 — should createNote를 tags를 포함해 호출한다 when 새 노트를 저장한다`
-- `[정상] NoteEditor 저장 — should updateNote를 { title, content, tags }로 호출한다 when 기존 노트를 저장한다`
+- [x] `[정상] addTag — should raw를 끝에 추가한 새 배열을 반환한다 when 비어있지 않은 값이다`
+- [x] `[정상] addTag — should 기존 순서를 유지하고 끝에 붙인다 when 이미 태그가 있다`
+- [x] `[정상] useTagInput — should value를 갱신한다 when handleChange가 입력 변경을 받는다`
+- [x] `[정상] useTagInput — should addTag 결과로 onChange를 호출한다 when 값이 있는 상태로 Enter를 누른다`
+- [x] `[정상] useTagInput — should 입력값을 빈 문자열로 비운다 when Enter로 확정한 뒤다`
+- [x] `[정상] TagInput — should 타이핑한 값이 onChange로 확정 전달된다 when 사용자가 입력 후 Enter를 누른다`
+- [x] `[정상] TagInput — should 입력 필드가 비워진다 when Enter로 확정한 뒤다`
+- [x] `[정상] TagInput — should 입력 필드에 포커스가 유지된다 when Enter로 확정한 뒤다`
+- [x] `[정상] NoteEditor 저장 — should createNote를 tags를 포함해 호출한다 when 새 노트를 저장한다`
+- [x] `[정상] NoteEditor 저장 — should updateNote를 { title, content, tags }로 호출한다 when 기존 노트를 저장한다`
 
 ### 경계
 
-- `[경계] addTag — should 앞뒤 공백을 trim한 값을 추가한다 when raw에 공백이 섞여 있다`
-- `[경계] addTag — should 빈 tags에 첫 원소로 추가한다 when tags가 []다`
-- `[경계] addTag — should 원본과 내용이 같은 배열을 반환한다(추가 없음) when trim 후 빈 문자열이다`
-- `[경계] addTag — should 입력 배열을 변형하지 않는다 when 태그를 추가한다` (불변성 — 새 배열 반환)
-- `[경계] addTag — should 중복이어도 그대로 추가한다 when 같은 값이 이미 존재한다` (중복 판정은 TAG-4)
-- `[경계] useTagInput — should onChange를 호출하지 않는다 when 값이 빈/공백인 채로 Enter를 누른다`
-- `[경계] useTagInput — should 확정하지 않는다 when Enter가 아닌 키를 누른다`
-- `[경계] TagInput — should 칩과 입력 필드를 함께 렌더한다 when tags가 비어있지 않다` (TAG-1 칩 표시 유지)
-- `[경계] TagInput — should 빈 배열이어도 입력 필드를 렌더한다 when tags가 []다` (TAG-1 "완전히 빈 DOM" 단언 대체)
-- `[경계] 로컬 전용 — should 서버 호출(api) 없이 로컬 tags만 바뀐다 when 칩을 추가한다` (저장 전까지 미전송)
-- `[경계] NoteEditor 저장 — should 저장이 에러로 끝나도 tags 로컬 state가 유지된다 when 저장에 실패한다` (재시도 가능, US-10)
+- [x] `[경계] addTag — should 앞뒤 공백을 trim한 값을 추가한다 when raw에 공백이 섞여 있다`
+- [x] `[경계] addTag — should 빈 tags에 첫 원소로 추가한다 when tags가 []다`
+- [x] `[경계] addTag — should 원본과 내용이 같은 배열을 반환한다(추가 없음) when trim 후 빈 문자열이다`
+- [x] `[경계] addTag — should 입력 배열을 변형하지 않는다 when 태그를 추가한다` (불변성 — 새 배열 반환)
+- [x] `[경계] addTag — should 중복이어도 그대로 추가한다 when 같은 값이 이미 존재한다` (중복 판정은 TAG-4)
+- [x] `[경계] useTagInput — should onChange를 호출하지 않는다 when 값이 빈/공백인 채로 Enter를 누른다`
+- [x] `[경계] useTagInput — should 확정하지 않는다 when Enter가 아닌 키를 누른다`
+- [x] `[경계] TagInput — should 칩과 입력 필드를 함께 렌더한다 when tags가 비어있지 않다` (TAG-1 칩 표시 유지)
+- [x] `[경계] TagInput — should 빈 배열이어도 입력 필드를 렌더한다 when tags가 []다` (TAG-1 "완전히 빈 DOM" 단언 대체)
+- [x] `[경계] 로컬 전용 — should 서버 호출(api) 없이 로컬 tags만 바뀐다 when 칩을 추가한다` (저장 전까지 미전송)
+- [x] `[경계] NoteEditor 저장 — should 저장이 에러로 끝나도 tags 로컬 state가 유지된다 when 저장에 실패한다` (재시도 가능, US-10)
 
 ### 예외
 
-- `[예외] TagInput — should 스타일 검사를 통과한다(원시 색상·테두리 없음) when design-system 훅이 diff를 검사한다` (입력 필드 추가분 포함)
+- [x] `[예외] TagInput — should 스타일 검사를 통과한다(원시 색상·테두리 없음) when design-system 훅이 diff를 검사한다` — 입력 필드 추가분이 ratchet 훅 통과
 
 > 참고 — 런타임 테스트로 만들지 않는 것:
 >

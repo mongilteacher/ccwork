@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNotes } from '../context/NotesContext';
+import { TagInput } from './TagInput';
 
 interface NoteEditorProps {
   selectedNoteId: string | null;
@@ -11,6 +12,7 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
   const { notes, createNote, updateNote } = useNotes();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
@@ -20,9 +22,11 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
     if (selectedNote) {
       setTitle(selectedNote.title);
       setContent(selectedNote.content);
+      setTags(selectedNote.tags);
     } else if (isCreating) {
       setTitle('');
       setContent('');
+      setTags([]);
     }
   }, [selectedNoteId, isCreating]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -35,7 +39,7 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
     setSaving(true);
     try {
       if (isCreating) {
-        await createNote(title, content);
+        await createNote(title, content, tags);
       } else if (selectedNoteId) {
         await updateNote(selectedNoteId, { title, content });
       }
@@ -77,6 +81,11 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
 
       {/* 구분선 */}
       <div className="h-px bg-border mb-4" />
+
+      {/* 태그 칩 */}
+      <div className="mb-4">
+        <TagInput tags={tags} />
+      </div>
 
       {/* 내용 입력 */}
       <textarea

@@ -54,26 +54,28 @@ export function TagInput({ tags }: TagInputProps); // 반환타입 생략(기존
 > 형식: `[정상|경계|예외] 대상 — should [기대동작] when [조건]`
 > TAG-1엔 도메인 함수가 없어 대상은 **타입·컴포넌트·폼 동기화**다.
 
+> ✅ = tdd-green으로 통과 확인 (2026-07-21)
+
 ### 정상
 
-- `[정상] Note 타입 — should tags를 string[] 필수 필드로 갖는다 when 타입 정의를 본다`
-- `[정상] TagInput — should tags 각 원소를 칩으로 렌더한다 when tags가 ["React","공부"]다`
-- `[정상] TagInput — should 칩을 tags 배열 순서대로 표시한다 when 다중 태그가 주어진다`
-- `[정상] NoteEditor 폼 동기화 — should 선택된 노트의 tags로 로컬 tags를 채운다 when 노트가 선택된다`
-- `[정상] NoteEditor 폼 동기화 — should 칩 목록을 B의 tags로 교체한다 when 노트 A에서 노트 B로 전환한다`
-- `[정상] createNote — should tags를 포함한 Note를 반환한다 when title·content·tags로 호출한다`
+- [x] `[정상] Note 타입 — should tags를 string[] 필수 필드로 갖는다 when 타입 정의를 본다` — `tsc` 통과(필수 필드화)
+- [x] `[정상] TagInput — should tags 각 원소를 칩으로 렌더한다 when tags가 ["React","공부"]다`
+- [x] `[정상] TagInput — should 칩을 tags 배열 순서대로 표시한다 when 다중 태그가 주어진다`
+- [x] `[정상] NoteEditor 폼 동기화 — should 선택된 노트의 tags로 로컬 tags를 채운다 when 노트가 선택된다`
+- [x] `[정상] NoteEditor 폼 동기화 — should 칩 목록을 B의 tags로 교체한다 when 노트 A에서 노트 B로 전환한다`
+- [x] `[정상] createNote — should tags를 포함한 Note를 반환한다 when title·content·tags로 호출한다`
 
 ### 경계
 
-- `[경계] TagInput — should 아무 칩도 렌더하지 않고 빈 상태 문구도 없이 비운다 when tags가 []다`
-- `[경계] TagInput — should 칩 하나만 렌더한다 when tags 원소가 1개다`
-- `[경계] NoteEditor 폼 동기화 — should 로컬 tags를 []로 초기화한다 when isCreating이고 선택된 노트가 없다`
-- `[경계] db.json — should 기존 노트 3건이 모두 tags를 갖고 최소 1건은 비어있지 않다 when 시드 데이터를 확인한다`
+- [x] `[경계] TagInput — should 아무 칩도 렌더하지 않고 빈 상태 문구도 없이 비운다 when tags가 []다`
+- [x] `[경계] TagInput — should 칩 하나만 렌더한다 when tags 원소가 1개다`
+- [x] `[경계] NoteEditor 폼 동기화 — should 로컬 tags를 []로 초기화한다 when isCreating이고 선택된 노트가 없다`
+- [x] `[경계] db.json — should 기존 노트 3건이 모두 tags를 갖고 최소 1건은 비어있지 않다 when 시드 데이터를 확인한다`
 
 ### 예외
 
-- `[예외] createNote 호출부 — should 컴파일 에러가 난다 when tags 없이 note 객체를 넘긴다` (tags 필수화 검증 — `tsc`가 잡음)
-- `[예외] TagInput — should 스타일 검사를 통과한다(원시 색상·테두리 없음) when design-system 훅이 diff를 검사한다`
+- [x] `[예외] createNote 호출부 — should 컴파일 에러가 난다 when tags 없이 note 객체를 넘긴다` (tags 필수화 검증 — `tsc`가 잡음)
+- [x] `[예외] TagInput — should 스타일 검사를 통과한다(원시 색상·테두리 없음) when design-system 훅이 diff를 검사한다` — 신규 `TagInput.tsx`가 ratchet 훅 통과
 
 ### AC 커버리지
 

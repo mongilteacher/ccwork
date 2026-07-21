@@ -41,7 +41,7 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
       if (isCreating) {
         await createNote(title, content, tags);
       } else if (selectedNoteId) {
-        await updateNote(selectedNoteId, { title, content });
+        await updateNote(selectedNoteId, { title, content, tags });
       }
       onDone();
     } catch (e) {
@@ -82,9 +82,9 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
       {/* 구분선 */}
       <div className="h-px bg-border mb-4" />
 
-      {/* 태그 칩 */}
+      {/* 태그 칩 + 입력 */}
       <div className="mb-4">
-        <TagInput tags={tags} />
+        <TagInput tags={tags} onChange={setTags} />
       </div>
 
       {/* 내용 입력 */}

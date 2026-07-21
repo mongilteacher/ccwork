@@ -165,6 +165,23 @@ e2e/.tmp/
 /playwright/.cache/
 ```
 
+## 7. Vitest에서 e2e 분리 (필수 — 안 하면 `npm test`가 깨진다)
+
+Vitest 기본 `include`는 `**/*.{test,spec}.*`라 **`e2e/*.spec.ts`(Playwright 파일)까지 잡아** 실행하려다 `test.describe() ... did not expect`로 실패한다. Playwright 스펙은 Vitest 러너에서 못 돈다. 유닛 테스트가 `src/`에 co-location돼 있으니 Vitest 범위를 `src/`로 좁힌다. `vite.config.ts`의 `test`에 추가:
+
+```ts
+test: {
+  globals: true,
+  environment: 'jsdom',
+  setupFiles: './src/test-setup.ts',
+  // e2e/의 Playwright *.spec.ts는 Vitest가 잡지 않게 범위를 src/로 좁힌다(실행으로 확인된 충돌)
+  include: ['src/**/*.{test,spec}.{ts,tsx}'],
+  // ...기존 coverage 등 유지
+},
+```
+
+이러면 `npm test`(Vitest, 유닛)와 `npm run test:e2e`(Playwright)가 완전히 분리된다.
+
 ---
 
 ## 검증
@@ -176,6 +193,8 @@ npm run test:e2e -- --list
 ```
 
 `webServer`가 뜨고 "no tests found"(아직 spec 없음)면 하네스는 정상이다. 이후 3단계에서 spec을 쓰면 실제로 돈다.
+
+그리고 **`npm test`(Vitest)가 여전히 초록불인지** 확인한다 — §7을 빠뜨리면 여기서 e2e 스펙이 Vitest에 걸려 깨진다.
 
 ## 알아둘 마찰점 (막히면 참고, 선제 대응은 하지 말 것)
 

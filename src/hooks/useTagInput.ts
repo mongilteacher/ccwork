@@ -13,6 +13,7 @@ export function useTagInput(tags: string[], onChange: (tags: string[]) => void) 
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return; // IME 조합 확정용 Enter → 태그 추가 안 함(TAG-5)
     if (e.key !== 'Enter') return;
     e.preventDefault();
     const err = validateTag(value, tags);

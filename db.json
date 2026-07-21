@@ -4,6 +4,7 @@
       "id": "1",
       "title": "첫 번째 노트",
       "content": "eeeee",
+      "tags": [],
       "createdAt": "2024-01-01T00:00:00.000Z",
       "updatedAt": "2026-03-23T13:57:08.282Z"
     },
@@ -11,6 +12,7 @@
       "id": "2",
       "title": "두 번째 노트",
       "content": "할 일 목록을 정리해봅시다.",
+      "tags": [],
       "createdAt": "2024-01-02T00:00:00.000Z",
       "updatedAt": "2024-01-02T00:00:00.000Z"
     },
@@ -18,22 +20,17 @@
       "id": "3",
       "title": "세 번째 노트",
       "content": "React와 TypeScript를 공부 중입니다.",
+      "tags": ["React", "TypeScript"],
       "createdAt": "2024-01-03T00:00:00.000Z",
       "updatedAt": "2024-01-03T00:00:00.000Z"
     },
     {
       "title": "ㅇㅅㅇ",
       "content": "ㅇㅅㅇ",
+      "tags": [],
       "createdAt": "2026-07-20T07:06:58.087Z",
       "updatedAt": "2026-07-20T07:07:57.489Z",
       "id": "30RT-MqSZXQ"
-    },
-    {
-      "title": "ㅈ3",
-      "content": "ㄷㄷ",
-      "createdAt": "2026-07-20T07:08:12.003Z",
-      "updatedAt": "2026-07-20T07:08:12.003Z",
-      "id": "aMDQTrwAZH4"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

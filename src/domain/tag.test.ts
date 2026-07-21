@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addTag } from './tag';
+import { addTag, removeTag } from './tag';
 
 // TAG-2 시나리오: addTag — 순수 규칙(trim + 빈 값 무시 + 끝에 추가)
 describe('addTag', () => {
@@ -35,5 +35,36 @@ describe('addTag', () => {
   it('should 중복이어도 그대로 추가한다 when 같은 값이 이미 존재한다', () => {
     // TAG-2는 중복 판정 없음 — 중복 제거는 TAG-4
     expect(addTag(['react'], 'react')).toEqual(['react', 'react']);
+  });
+});
+
+// TAG-3 시나리오: removeTag — 값 기준 filter(순수 규칙, addTag의 대칭)
+describe('removeTag', () => {
+  // ── 정상 ──
+  it('should 해당 태그를 뺀 새 배열을 반환한다 when 존재하는 tag를 지운다', () => {
+    expect(removeTag(['React', '공부'], '공부')).toEqual(['React']);
+  });
+
+  it('should 나머지 태그의 순서를 유지한다 when 중간의 tag를 지운다', () => {
+    expect(removeTag(['alpha', 'beta', 'gamma'], 'beta')).toEqual(['alpha', 'gamma']);
+  });
+
+  // ── 경계 ──
+  it('should 원본과 내용이 같은 배열을 반환한다(no-op) when 존재하지 않는 tag를 지운다', () => {
+    expect(removeTag(['React', '공부'], 'Vue')).toEqual(['React', '공부']);
+  });
+
+  it('should 빈 배열을 반환한다 when 마지막 하나 남은 tag를 지운다', () => {
+    expect(removeTag(['React'], 'React')).toEqual([]);
+  });
+
+  it('should []를 그대로 반환한다 when tags가 []다', () => {
+    expect(removeTag([], 'React')).toEqual([]);
+  });
+
+  it('should 입력 배열을 변형하지 않는다 when 태그를 제거한다', () => {
+    const original = ['React', '공부'];
+    removeTag(original, '공부');
+    expect(original).toEqual(['React', '공부']);
   });
 });

@@ -110,4 +110,30 @@ describe('NoteEditor 태그 저장', () => {
     // 실패 후에도 방금 추가한 칩이 남아 재시도할 수 있다
     expect(await screen.findByText('Redux')).toBeInTheDocument();
   });
+
+  // TAG-3 AC4: 삭제로 줄어든 tags가 저장 시 그대로 전송된다
+  it('should 삭제로 줄어든 tags를 updateNote에 전달한다 when 칩을 삭제한 뒤 저장한다', async () => {
+    const { updateNote } = setNotes([noteA]);
+    render(<NoteEditor selectedNoteId="1" isCreating={false} onDone={() => {}} />);
+    await userEvent.click(screen.getByRole('button', { name: '공부 삭제' }));
+    await userEvent.click(screen.getByRole('button', { name: '저장' }));
+    expect(updateNote).toHaveBeenCalledWith('1', expect.objectContaining({ tags: ['React'] }));
+  });
+});
+
+// TAG-3 AC3: 취소 시 미저장 변경(칩 삭제 포함)을 원본으로 되돌린다
+describe('NoteEditor 취소 롤백', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('should 삭제한 칩을 원상 복구한다 when 기존 노트 편집 중 칩을 삭제하고 취소를 누른다', async () => {
+    setNotes([noteA]);
+    render(<NoteEditor selectedNoteId="1" isCreating={false} onDone={() => {}} />);
+    // 공부 삭제 → 로컬에서 사라짐
+    await userEvent.click(screen.getByRole('button', { name: '공부 삭제' }));
+    expect(screen.queryByText('공부')).not.toBeInTheDocument();
+    // 취소 → 원본(서버 값)으로 되돌아옴
+    await userEvent.click(screen.getByRole('button', { name: '취소' }));
+    expect(screen.getByText('공부')).toBeInTheDocument();
+    expect(screen.getByText('React')).toBeInTheDocument();
+  });
 });

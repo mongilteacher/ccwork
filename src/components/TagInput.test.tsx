@@ -58,4 +58,39 @@ describe('TagInput', () => {
     await userEvent.type(input, 'React{Enter}');
     expect(input).toHaveFocus();
   });
+
+  // ── TAG-3: 칩 × 삭제 ──
+  // 삭제 버튼 계약: aria-label = `${tag} 삭제` (테스트에서 칩별로 지목)
+  it('should React는 남고 공부만 사라진다 when 공부 칩의 ×를 클릭한다', async () => {
+    const onChange = vi.fn();
+    render(<TagInput tags={['React', '공부']} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('button', { name: '공부 삭제' }));
+    expect(onChange).toHaveBeenCalledWith(['React']);
+  });
+
+  it('should 클릭한 칩만 빠진 배열이 onChange로 전달된다 when 칩의 × 버튼을 누른다', async () => {
+    const onChange = vi.fn();
+    render(<TagInput tags={['alpha', 'beta', 'gamma']} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('button', { name: 'beta 삭제' }));
+    expect(onChange).toHaveBeenCalledWith(['alpha', 'gamma']);
+  });
+
+  it('should × 클릭이 상위 클릭 핸들러로 전파되지 않는다 when 칩의 × 버튼을 누른다', async () => {
+    const onParentClick = vi.fn();
+    render(
+      <div onClick={onParentClick}>
+        <TagInput tags={['React']} onChange={() => {}} />
+      </div>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'React 삭제' }));
+    expect(onParentClick).not.toHaveBeenCalled();
+  });
+
+  it('should confirm 다이얼로그를 띄우지 않는다 when 칩을 삭제한다', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm');
+    render(<TagInput tags={['React']} onChange={() => {}} />);
+    await userEvent.click(screen.getByRole('button', { name: 'React 삭제' }));
+    expect(confirmSpy).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
 });

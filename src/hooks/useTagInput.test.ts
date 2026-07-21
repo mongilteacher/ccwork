@@ -48,4 +48,12 @@ describe('useTagInput', () => {
     act(() => result.current.handleKeyDown(keyEvent('a')));
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  // ── TAG-3: 칩 삭제 (handleRemove) ──
+  it('should removeTag 결과로 onChange를 호출한다 when handleRemove(tag)를 부른다', () => {
+    const onChange = vi.fn();
+    const { result } = renderHook(() => useTagInput(['React', '공부'], onChange));
+    act(() => result.current.handleRemove('공부'));
+    expect(onChange).toHaveBeenCalledWith(['React']);
+  });
 });

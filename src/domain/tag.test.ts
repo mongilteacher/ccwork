@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addTag, removeTag } from './tag';
+import { addTag, removeTag, validateTag, MAX_TAG_LENGTH, MAX_TAG_COUNT } from './tag';
 
 // TAG-2 시나리오: addTag — 순수 규칙(trim + 빈 값 무시 + 끝에 추가)
 describe('addTag', () => {
@@ -66,5 +66,47 @@ describe('removeTag', () => {
     const original = ['React', '공부'];
     removeTag(original, '공부');
     expect(original).toEqual(['React', '공부']);
+  });
+});
+
+// TAG-4 시나리오: validateTag — 검증 규칙(순수). spec §5.3 우선순위 + §6.2 엣지케이스
+describe('validateTag', () => {
+  // 상수 확인 — 규칙의 상한이 명세와 일치하는가
+  it('should 20과 10이다 when MAX_TAG_LENGTH·MAX_TAG_COUNT를 읽는다', () => {
+    expect(MAX_TAG_LENGTH).toBe(20);
+    expect(MAX_TAG_COUNT).toBe(10);
+  });
+
+  // ── it.each 테이블: spec §5.3(우선순위)·§6.2(엣지케이스)를 그대로 이관 (AC9) ──
+  const tenTags = Array.from({ length: 10 }, (_, i) => `tag${i}`);
+  const nineTags = Array.from({ length: 9 }, (_, i) => `tag${i}`);
+  const tenWithReact = ['react', ...Array.from({ length: 9 }, (_, i) => `tag${i}`)];
+
+  it.each([
+    // [설명, value, tags, 기대]
+    ['처음 보는 유효한 태그', 'React', [] as string[], null],
+    ['앞뒤 공백을 뺀 유효값', '  React  ', [] as string[], null],
+    ['내부 공백 포함 한 태그', 'React Query', [] as string[], null],
+    ['특수문자 C++', 'C++', [] as string[], null],
+    ['특수문자 #React', '#React', [] as string[], null],
+    ['쉼표 포함 한 태그', 'React, Vue', [] as string[], null],
+    ['정확히 20자', 'a'.repeat(20), [] as string[], null],
+    ['9개일 때 새 값', 'newTag', nineTags, null],
+    ['빈 문자열', '', [] as string[], null],
+    ['공백만', '   ', [] as string[], null],
+    ['21자', 'a'.repeat(21), [] as string[], 'tooLong'],
+    ['10개일 때 새 값', 'newTag', tenTags, 'tooMany'],
+    ['대소문자만 다른 중복', 'react', ['React'], 'duplicate'],
+    ['21자이면서 중복(우선순위상 길이)', 'a'.repeat(21), ['a'.repeat(21)], 'tooLong'],
+    ['10개이면서 중복(우선순위상 개수)', 'react', tenWithReact, 'tooMany'],
+  ])('should %s → %j를 반환한다', (_desc, value, tags, expected) => {
+    expect(validateTag(value, tags)).toBe(expected);
+  });
+
+  // ── 이모지: [...value].length(코드 포인트) 기준이라 부당 거부되지 않음 (AC3) ──
+  it("should 'tooLong'이 아니다 when 이모지 11개를 [...value].length로 센다", () => {
+    const emojis = '😀'.repeat(11); // .length === 22(서로게이트 쌍), [...].length === 11
+    expect([...emojis].length).toBe(11);
+    expect(validateTag(emojis, [])).toBeNull();
   });
 });

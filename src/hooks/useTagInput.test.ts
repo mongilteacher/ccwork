@@ -56,4 +56,34 @@ describe('useTagInput', () => {
     act(() => result.current.handleRemove('공부'));
     expect(onChange).toHaveBeenCalledWith(['React']);
   });
+
+  // ── TAG-4: 검증 에러 state ──
+  it('should error가 null이고 onChange로 추가된다 when 유효한 값에서 Enter를 누른다', () => {
+    const onChange = vi.fn();
+    const { result } = renderHook(() => useTagInput([], onChange));
+    act(() => result.current.handleChange(changeEvent('React')));
+    act(() => result.current.handleKeyDown(keyEvent('Enter')));
+    expect(result.current.error).toBeNull();
+    expect(onChange).toHaveBeenCalledWith(['React']);
+  });
+
+  it('should error를 설정하고 onChange를 호출하지 않는다 when 중복 값에서 Enter를 누른다', () => {
+    const onChange = vi.fn();
+    const { result } = renderHook(() => useTagInput(['React'], onChange));
+    act(() => result.current.handleChange(changeEvent('react')));
+    act(() => result.current.handleKeyDown(keyEvent('Enter')));
+    expect(result.current.error).toBe('duplicate');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('should 입력값을 바꾸면 error가 즉시 null이 된다 when handleChange가 호출된다', () => {
+    const { result } = renderHook(() => useTagInput(['React'], vi.fn()));
+    // 먼저 중복으로 error를 세운다
+    act(() => result.current.handleChange(changeEvent('react')));
+    act(() => result.current.handleKeyDown(keyEvent('Enter')));
+    expect(result.current.error).toBe('duplicate');
+    // 입력값을 바꾸는 순간 error가 사라진다(타이머 아님)
+    act(() => result.current.handleChange(changeEvent('reactx')));
+    expect(result.current.error).toBeNull();
+  });
 });

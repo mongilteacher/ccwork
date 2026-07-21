@@ -1,7 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
+import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TagInput } from './TagInput';
+
+// tags를 실제 state로 관리하는 하네스 — 삭제→재활성화 같은 전이를 검증할 때 쓴다
+function TagInputHarness({ initial }: { initial: string[] }) {
+  const [tags, setTags] = useState(initial);
+  return <TagInput tags={tags} onChange={setTags} />;
+}
 
 // TAG-1 유지(칩 표시) + TAG-2(입력 필드·Enter 확정·포커스)
 describe('TagInput', () => {
@@ -92,5 +99,52 @@ describe('TagInput', () => {
     await userEvent.click(screen.getByRole('button', { name: 'React 삭제' }));
     expect(confirmSpy).not.toHaveBeenCalled();
     confirmSpy.mockRestore();
+  });
+
+  // ── TAG-4: 인라인 안내 메시지 (문구 매핑) ──
+  it('should 안내 메시지를 렌더하지 않는다 when error가 없다', () => {
+    render(<TagInput tags={['React']} onChange={() => {}} />);
+    expect(screen.queryByText('이미 추가된 태그입니다')).not.toBeInTheDocument();
+    expect(screen.queryByText('태그는 20자까지 입력할 수 있습니다')).not.toBeInTheDocument();
+  });
+
+  it("should '이미 추가된 태그입니다'를 렌더한다 when duplicate로 추가가 거부된다", async () => {
+    render(<TagInput tags={['React']} onChange={vi.fn()} />);
+    await userEvent.type(screen.getByRole('textbox'), 'react{Enter}');
+    expect(screen.getByText('이미 추가된 태그입니다')).toBeInTheDocument();
+  });
+
+  it("should '태그는 20자까지 입력할 수 있습니다'를 렌더한다 when tooLong으로 거부된다", async () => {
+    render(<TagInput tags={[]} onChange={vi.fn()} />);
+    await userEvent.type(screen.getByRole('textbox'), `${'a'.repeat(21)}{Enter}`);
+    expect(screen.getByText('태그는 20자까지 입력할 수 있습니다')).toBeInTheDocument();
+  });
+
+  it('should alert()·confirm()을 호출하지 않는다 when 검증에 실패한다', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => false);
+    render(<TagInput tags={['React']} onChange={vi.fn()} />);
+    await userEvent.type(screen.getByRole('textbox'), 'react{Enter}');
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(confirmSpy).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+    confirmSpy.mockRestore();
+  });
+
+  // ── TAG-4: 개수 제한 (disabled + placeholder) ──
+  it('should input이 disabled되고 placeholder가 바뀐다 when tags가 10개다', () => {
+    const tenTags = Array.from({ length: 10 }, (_, i) => `tag${i}`);
+    render(<TagInput tags={tenTags} onChange={() => {}} />);
+    const input = screen.getByRole('textbox');
+    expect(input).toBeDisabled();
+    expect(input).toHaveAttribute('placeholder', '태그는 최대 10개입니다');
+  });
+
+  it('should 칩을 하나 삭제하면 input이 다시 활성화된다 when 10개에서 9개가 된다', async () => {
+    const tenTags = Array.from({ length: 10 }, (_, i) => `tag${i}`);
+    render(<TagInputHarness initial={tenTags} />);
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'tag0 삭제' }));
+    expect(screen.getByRole('textbox')).toBeEnabled();
   });
 });

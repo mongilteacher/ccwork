@@ -39,9 +39,9 @@ E2E의 고유 가치는 **하위 계층이 구조적으로 볼 수 없는 것**�
 
 사용자가 화면에서 보고 하는 것만 테스트하고, 내부 구현에는 의존하지 않는다. 자세한 패턴은 [`references/playwright-patterns.md`](references/playwright-patterns.md)에 있고, 핵심만:
 
-- **사용자 관점 로케이터**: `getByRole`·`getByText`·`getByPlaceholder`·`getByLabel`. CSS 클래스·`data-testid`·XPath에 의존하지 않는다(테스트 대상은 사용자가 보는 것이지 DOM 구조가 아니다).
+- **사용자 관점 로케이터**: `getByRole`·`getByText`·`getByPlaceholder`. CSS 클래스·`data-testid`·XPath에 의존하지 않는다. 단, **짧은 단어를 `getByText`로 조준하면 본문·다른 요소와 충돌**해 strict mode 위반이 난다 — 칩 등은 `aria-label`을 가진 **버튼 role**로 정확히 조준한다(실행으로 확인). 문구·역할은 반드시 실제 `src/`에서 확인한다.
 - **웹 우선 단언(자동 재시도)**: `await expect(locator).toBeVisible()`. `waitForTimeout` 같은 **임의 대기(sleep) 금지** — 비동기 저장·리렌더를 sleep으로 기다리면 느리거나 깨진다.
-- **테스트 독립성**: 각 테스트는 **자기 데이터를 스스로 만든다**. 실행 순서·다른 테스트에 의존하지 않는다. mock 서버가 공유 상태라, 테스트마다 **고유한 노트 제목**(타임스탬프 등)을 써서 자기 노트만 조준한다. **전역 목록 개수(`X개 노트`)를 단언하지 않는다** — 병렬 실행에서 깨진다.
+- **테스트 독립성**: 각 테스트는 **자기 데이터를 스스로 만들고**(고유 제목), **종료 후 자기 노트를 정리**한다(fixture). **전역 목록 개수(`X개 노트`)를 단언하지 않는다.** 그리고 `API_URL`이 단일 포트로 하드코딩돼 공유 백엔드가 하나뿐이라, 동시 쓰기 경쟁을 피하려면 **`workers: 1` 직렬 실행**이 필요하다(harness-setup 참조).
 - **한 테스트 = 한 여정**: 이름은 검증하는 사용자 스토리를 그대로 드러낸다.
 
 ---
@@ -93,7 +93,7 @@ grep -rn "describe(\|it(" src --include="*.test.ts" --include="*.test.tsx"
 npm run test:e2e
 ```
 
-`webServer`가 Vite(5173) + 시드 사본 json-server(3001)를 자동 기동하므로 별도로 `npm run dev`를 띄울 필요 없다. 실패하면 원인을 구분한다:
+`webServer`가 Vite(5173) + 시드 사본 json-server(3001)를 자동 기동하므로 별도로 `npm run dev`를 띄울 필요 없다. **다만 실제 `npm run dev`가 이미 떠 있으면** `reuseExistingServer`가 그 5173을 재사용해 **실제 `db.json`에 붙어 돈다**(정리 fixture 덕에 순효과는 0이나 격리 경로는 미검증). 실행 전 3001/5173 점유를 확인하고, 실서버에 붙는 상황이면 개발자에게 알린다(harness-setup 「마찰점」 참조). 실패하면 원인을 구분한다:
 
 - **테스트 결함**(로케이터 오타, 잘못된 단언) → `e2e/` 안에서 고친다.
 - **구현 버그**(스토리가 실제로 충족 안 됨) → **고치지 말고 보고한다.** `src/`는 이 스킬의 범위 밖이다.

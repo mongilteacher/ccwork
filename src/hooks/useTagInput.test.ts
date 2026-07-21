@@ -5,8 +5,20 @@ import { useTagInput } from './useTagInput';
 // React 이벤트를 흉내내는 최소 객체
 const changeEvent = (value: string) =>
   ({ target: { value } }) as React.ChangeEvent<HTMLInputElement>;
+// nativeEvent.isComposing 기본 false — TAG-5 IME 가드가 이 값을 읽는다
 const keyEvent = (key: string) =>
-  ({ key, preventDefault: () => {} }) as React.KeyboardEvent<HTMLInputElement>;
+  ({
+    key,
+    nativeEvent: { isComposing: false },
+    preventDefault: () => {},
+  }) as React.KeyboardEvent<HTMLInputElement>;
+// IME 조합 중 이벤트 — isComposing=true
+const composingKeyEvent = (key: string) =>
+  ({
+    key,
+    nativeEvent: { isComposing: true },
+    preventDefault: () => {},
+  }) as React.KeyboardEvent<HTMLInputElement>;
 
 // TAG-2 시나리오: useTagInput — 입력 state·Enter 확정·입력 비움
 describe('useTagInput', () => {
@@ -85,5 +97,36 @@ describe('useTagInput', () => {
     // 입력값을 바꾸는 순간 error가 사라진다(타이머 아님)
     act(() => result.current.handleChange(changeEvent('reactx')));
     expect(result.current.error).toBeNull();
+  });
+
+  // ── TAG-5: 한글 IME 조합 가드 ──
+  it('should 조합이 끝난 뒤 Enter로 정상 추가된다 when isComposing이 false다', () => {
+    const onChange = vi.fn();
+    const { result } = renderHook(() => useTagInput([], onChange));
+    act(() => result.current.handleChange(changeEvent('한글')));
+    act(() => result.current.handleKeyDown(keyEvent('Enter')));
+    expect(onChange).toHaveBeenCalledWith(['한글']);
+  });
+
+  it('should 태그를 추가하지 않는다 when 한글 조합 중(isComposing=true) Enter를 누른다', () => {
+    const onChange = vi.fn();
+    const { result } = renderHook(() => useTagInput([], onChange));
+    act(() => result.current.handleChange(changeEvent('한글')));
+    act(() => result.current.handleKeyDown(composingKeyEvent('Enter')));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('should 이중 추가되지 않는다 when 조합 Enter 직후 확정 Enter가 온다', () => {
+    const onChange = vi.fn();
+    const { result } = renderHook(() => useTagInput([], onChange));
+    act(() => result.current.handleChange(changeEvent('한글')));
+    // 조합 확정용 Enter는 무시돼야 한다 — 추가도 없고 입력값도 그대로 유지
+    act(() => result.current.handleKeyDown(composingKeyEvent('Enter')));
+    expect(onChange).not.toHaveBeenCalled();
+    expect(result.current.value).toBe('한글');
+    // 실제 확정 Enter에서만 1회 추가된다
+    act(() => result.current.handleKeyDown(keyEvent('Enter')));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(['한글']);
   });
 });

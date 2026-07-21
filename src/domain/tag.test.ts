@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addTag, removeTag, validateTag, MAX_TAG_LENGTH, MAX_TAG_COUNT } from './tag';
+import { addTag, removeTag, validateTag, normalizeTag, MAX_TAG_LENGTH, MAX_TAG_COUNT } from './tag';
 
 // TAG-2 시나리오: addTag — 순수 규칙(trim + 빈 값 무시 + 끝에 추가)
 describe('addTag', () => {
@@ -108,5 +108,58 @@ describe('validateTag', () => {
     const emojis = '😀'.repeat(11); // .length === 22(서로게이트 쌍), [...].length === 11
     expect([...emojis].length).toBe(11);
     expect(validateTag(emojis, [])).toBeNull();
+  });
+});
+
+// TAG-5 시나리오: normalizeTag — 정규화 파이프라인(순수). spec §5.2 순서 + §6.2 엣지케이스
+describe('normalizeTag', () => {
+  // ── it.each 테이블: spec §5.2(순서)·§6.2(엣지케이스) 이관 (AC7) ──
+  const nfcHan = '한글'.normalize('NFC');
+  const nfdHan = '한글'.normalize('NFD');
+
+  it.each([
+    // [설명, raw, 기대]
+    ['정규화 불필요한 값', 'React', 'React'],
+    ['앞뒤 공백 제거', '  React  ', 'React'],
+    ['내부 단일 공백 보존', 'React Query', 'React Query'],
+    ['연속 공백 축약', 'React  Query', 'React Query'],
+    ['공백 3개 이상 축약', 'a     b', 'a b'],
+    ['개행 → 공백', 'line1\nline2', 'line1 line2'],
+    ['빈 줄 포함 여러 줄 → 공백 1개', 'a\n\nb', 'a b'],
+    ['탭 → 공백', 'a\tb', 'a b'],
+    ['CRLF 개행 → 공백 1개', 'a\r\nb', 'a b'],
+    ['공백·개행만이면 빈 문자열', '  \n\t ', ''],
+    ['쉼표 보존(분리 안 함)', 'React, Vue', 'React, Vue'],
+  ])('should %s → %j를 반환한다', (_desc, raw, expected) => {
+    expect(normalizeTag(raw)).toBe(expected);
+  });
+
+  // ── NFD → NFC (macOS 복사 한글) ──
+  it('should NFD를 NFC로 정규화한다 when 자모 분리형 한글이다', () => {
+    expect(nfdHan).not.toBe(nfcHan); // 정규화 전엔 코드포인트가 다름
+    expect(normalizeTag(nfdHan)).toBe(nfcHan);
+  });
+});
+
+// TAG-5 시나리오: addTag/validateTag 통합 지점 — 정규화 기준으로 동작
+describe('addTag (TAG-5 정규화 통합)', () => {
+  it('should 개행 포함 값을 한 줄로 정규화해 추가한다 when 여러 줄을 붙여넣는다', () => {
+    expect(addTag([], 'line1\nline2')).toEqual(['line1 line2']);
+  });
+
+  it('should 쉼표 포함 값을 하나의 태그로 추가한다 when React, Vue를 넣는다', () => {
+    expect(addTag([], 'React, Vue')).toEqual(['React, Vue']);
+  });
+
+  it('should 연속 공백을 축약해 추가한다 when React  Query를 넣는다', () => {
+    expect(addTag([], 'React  Query')).toEqual(['React Query']);
+  });
+});
+
+describe('validateTag (TAG-5 NFC 중복)', () => {
+  it("should 'duplicate'를 반환한다 when NFD 한글이 기존 NFC 한글과 정규화 후 같다", () => {
+    const nfcHan = '한글'.normalize('NFC');
+    const nfdHan = '한글'.normalize('NFD');
+    expect(validateTag(nfdHan, [nfcHan])).toBe('duplicate');
   });
 });

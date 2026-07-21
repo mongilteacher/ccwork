@@ -181,6 +181,21 @@ export function Xxx({ a, b }: XxxProps) {   // 2. 함수 선언 + 구조분해
 - **e2e 프레임워크는 없다.** Playwright/Cypress 미설치이며, json-server가 실제 `db.json`을 수정하므로 도입하려면 픽스처 격리가 선행돼야 한다. 현재는 계획에 없다.
 - **`npm test`를 husky 훅에 넣지 말 것.** 넣으려면 `vitest run --passWithNoTests`를 써야 한다(아래 「커밋 규칙」 주의사항).
 
+## TDD 이슈 사이클
+
+새 이슈 작업 시 다음 순서를 따른다:
+
+1. /test-scenarios N — 시그니처 + 시나리오 (skill)
+2. /tdd-red N — 실패 테스트 작성 (skill)
+3. /tdd-green N — 최소 구현, 테스트 전체 통과 (skill)
+4. @ac-verifier N — AC 충족 독립 검증, 테스트 통과 ≠ AC 충족 (agent)
+5. /tdd-refactor N — 구조 개선, 깨지면 즉시 롤백 (skill)
+6. /security-review N — 타입·보안 점검 (skill)
+7. commit → PR --base feature/<spec> → squash merge → 이슈 클로즈
+
+각 단계는 인간 승인 게이트가 있다. **자동으로 다음 단계로 넘어가지 말 것.**
+이슈 의존성이 있으면 선행 이슈가 머지된 feature 브랜치에서 분기.
+
 ## 코드 컨벤션
 
 - Prettier: 세미콜론 O, 작은따옴표, `tabWidth: 2`, `trailingComma: all`, `printWidth: 100`.

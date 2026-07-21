@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type KeyboardEvent } from 'react';
-import { addTag } from '../domain/tag';
+import { addTag, removeTag } from '../domain/tag';
 
 // 태그 입력 동작 — 입력 state·Enter 확정(표현과 분리, PRD ADR-3)
 // TAG-2 범위: IME 가드 없음(TAG-5).
@@ -19,5 +19,10 @@ export function useTagInput(tags: string[], onChange: (tags: string[]) => void) 
     setValue('');
   };
 
-  return { value, handleChange, handleKeyDown };
+  // TAG-3: 칩 × 삭제 — 로컬 tags만 갱신(서버 호출 없음, 확인 다이얼로그 없음)
+  const handleRemove = (tag: string) => {
+    onChange(removeTag(tags, tag));
+  };
+
+  return { value, handleChange, handleKeyDown, handleRemove };
 }

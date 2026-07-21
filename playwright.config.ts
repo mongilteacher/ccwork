@@ -14,6 +14,8 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     // 첫 재시도 때만 trace 남김 — 실패 디버깅용
     trace: 'on-first-retry',
+    // 시연용 느린 재생. 기본 0이라 평소·CI엔 영향 없음. 예: SLOWMO=800 npm run test:e2e -- --headed
+    launchOptions: { slowMo: Number(process.env.SLOWMO) || 0 },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   // Vite(5173) + 시드 사본 json-server(3001)를 자동 기동

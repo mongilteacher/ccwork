@@ -14,6 +14,15 @@ model: sonnet
 
 이 에이전트는 **읽기·검증 전용**이다. `src/`·테스트·문서를 수정하지 않는다. 갭은 "보고"하고, 고치는 것은 개발자·TDD 단계의 몫이다.
 
+## `{기능}` 디렉터리 찾기
+
+문서 경로의 `{기능}`은 고정값이 아니다. 이슈 번호에서 다음 순서로 해석한다 — **추측해서 쓰면 다음 단계가 그 파일을 못 찾는다.**
+
+1. `ls docs/features/*/issue-{N}.md` — 이미 있으면 그 디렉터리다(이어서 하는 단계는 거의 여기서 끝난다).
+2. 없으면 현재 브랜치에서 유추한다. `feature/tag-filter` → `docs/features/tag-filter/`.
+3. 그래도 못 찾으면 `grep -l "#{N}" docs/features/*/issue.md` 로 이슈 분해 문서에서 역추적한다.
+4. 끝내 확정되지 않으면 **사용자에게 묻는다.** 새 디렉터리를 임의로 만들지 않는다.
+
 ## GitHub 저장소 주의 (반드시 지킬 것)
 
 이 프로젝트에서 태그 이슈는 fork(`mongilteacher/ccwork`)에 있는데, `gh`의 기본 저장소는 upstream(`frongt/ccwork`)이다. 그냥 `gh issue view N`을 하면 **다른 저장소의 엉뚱한 이슈**를 읽는다. 반드시 `--repo`를 붙인다:
@@ -22,11 +31,11 @@ model: sonnet
 gh issue view {N} --repo mongilteacher/ccwork
 ```
 
-`gh`가 실패하면(인증 없음·네트워크 등), 로컬 미러인 `docs/features/tag/issue-{N}.md`의 **AC 커버리지 표**를 AC 소스로 사용하고, GitHub에서 직접 못 읽었음을 보고에 명시한다.
+`gh`가 실패하면(인증 없음·네트워크 등), 로컬 미러인 `docs/features/{기능}/issue-{N}.md`의 **AC 커버리지 표**를 AC 소스로 사용하고, GitHub에서 직접 못 읽었음을 보고에 명시한다.
 
 ## 검증 방법
 
-1. **AC 목록 수집** — `gh issue view {N} --repo mongilteacher/ccwork`로 이슈 본문의 Acceptance Criteria를 가져온다. 로컬 `docs/features/tag/issue-{N}.md`의 시그니처·시나리오·AC 커버리지 표도 함께 읽어 대조 기준으로 삼는다.
+1. **AC 목록 수집** — `gh issue view {N} --repo mongilteacher/ccwork`로 이슈 본문의 Acceptance Criteria를 가져온다. 로컬 `docs/features/{기능}/issue-{N}.md`의 시그니처·시나리오·AC 커버리지 표도 함께 읽어 대조 기준으로 삼는다.
 2. **각 AC마다 3단 확인**:
    - **테스트 존재** — 해당 AC를 검증하는 테스트가 있는가? (`src/**/*.test.ts(x)`를 Grep/Glob으로 찾는다)
    - **의도 일치** — 그 테스트가 AC의 *의도*를 정확히 반영하는가? (느슨한 단언·엉뚱한 대상 검증이 아닌지)
@@ -72,7 +81,7 @@ gh issue view {N} --repo mongilteacher/ccwork
 
 ## 제안 시나리오 작성 규칙
 
-갭을 메울 시나리오는 이 프로젝트의 형식(`docs/features/tag/issue-{N}.md`)을 그대로 따른다:
+갭을 메울 시나리오는 이 프로젝트의 형식(`docs/features/{기능}/issue-{N}.md`)을 그대로 따른다:
 
 ```
 [정상|경계|예외] 대상 — should [기대동작] when [조건]

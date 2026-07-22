@@ -66,6 +66,8 @@ CLAUDE.md의 TDD 이슈 사이클은 `PR --base feature/<spec>` → squash merge
 Closes #N
 ```
 
+- **`Closes #N`은 이슈를 자동으로 닫지 못한다.** GitHub은 PR이 _기본 브랜치(main)로_ 머지될 때만 자동 클로즈한다. 이 프로젝트의 이슈 PR은 base가 `feature/<spec>`이라 머지해도 이슈는 열린 채 남는다. `Closes`는 PR↔이슈 연결 표시로 여전히 쓰되, **머지 후 `gh issue close N --repo mongilteacher/ccwork`가 필요하다는 것을 5단계에서 함께 안내한다.** 안 그러면 "닫혔겠지" 하고 이슈가 계속 쌓인다.
+
 - 전부 **한국어**로 쓴다(프로젝트의 사용자 문구 규약).
 - 이슈 번호는 브랜치 이름·커밋 메시지·`docs/features/*/issue-*.md`에서 찾는다. 확신이 없으면 넣지 말고 승인 단계에서 물어본다 — 틀린 `Closes`는 남의 이슈를 닫는다.
 
@@ -83,6 +85,8 @@ Closes #N
 npm run test:e2e
 ```
 
+- **E2E를 돌리기 전에 포트를 확인한다**: `lsof -nP -iTCP:5173 -sTCP:LISTEN; lsof -nP -iTCP:3001 -sTCP:LISTEN`.
+  1단계에서 이미 봤더라도 여기서 한 번 더 본다 — 초안 검토와 승인 사이에 사람이 `npm run dev`를 띄울 수 있다.
 - Playwright의 `webServer` 설정이 Vite(5173)와 시드 사본 json-server(3001)를 자동으로 띄운다. 따로 `npm run dev`를 켤 필요 없다.
 - E2E는 `e2e/fixtures/db.seed.json`의 **사본**을 쓰므로 실제 `db.json`은 오염되지 않는다. 개발자가 걱정하면 이 점을 알려준다.
 - 5173/3001 포트를 이미 쓰고 있으면 `reuseExistingServer` 때문에 **개발 중인 서버에 붙어 실제 `db.json`을 건드릴 수 있다.** 사전에 실행 중인 dev 서버가 있으면 내리고 돌리라고 안내한다.

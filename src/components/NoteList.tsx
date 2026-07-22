@@ -1,13 +1,18 @@
 import { useNotes } from '../context/NotesContext';
+import { isHighlighted, resolveSelectedTag } from '../domain/tagFilter';
 import { NoteItem } from './NoteItem';
 
 interface NoteListProps {
   selectedNoteId: string | null;
+  selectedTag?: string | null; // 강조 판정용 — 목록에서 노트를 걸러내지는 않는다
   onSelect: (id: string) => void;
 }
 
-export function NoteList({ selectedNoteId, onSelect }: NoteListProps) {
+export function NoteList({ selectedNoteId, selectedTag = null, onSelect }: NoteListProps) {
   const { notes, loading, error, deleteNote } = useNotes();
+
+  // ADR-3: 태그 목록에 없는 선택 태그는 렌더 시점에 해제된 것으로 본다 (useEffect 없음)
+  const effectiveTag = resolveSelectedTag(notes, selectedTag);
 
   const handleDelete = async (id: string) => {
     try {
@@ -39,6 +44,7 @@ export function NoteList({ selectedNoteId, onSelect }: NoteListProps) {
           key={note.id}
           note={note}
           isSelected={note.id === selectedNoteId}
+          isHighlighted={isHighlighted(note, effectiveTag)}
           onSelect={onSelect}
           onDelete={handleDelete}
         />

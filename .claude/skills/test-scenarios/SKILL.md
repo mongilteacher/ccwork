@@ -1,6 +1,6 @@
 ---
 name: test-scenarios
-description: 하나의 GitHub 이슈를 대상으로 "시그니처 확정 → 테스트 시나리오 도출"을 순서대로 처리한다. `/test-scenarios {이슈번호}`로 실행한다. 이슈의 함수 시그니처·에러 케이스·컴포넌트 Props 타입을 먼저 확정하고, 그걸 기반으로 정상/경계/예외 테스트 시나리오를 뽑아 `docs/features/tag/issue-{N}.md`에 기록한 뒤 GitHub AC와 대조한다. "테스트 시나리오", "시그니처 확정", "test scenario", "이슈 시나리오 도출", "AC 커버리지", "/test-scenarios" 관련 요청이면 명시적으로 '스킬'을 언급하지 않아도 반드시 사용한다. 구현 코드도 테스트 코드도 작성하지 않는다(그건 이후 TDD 단계). 두 번의 승인 게이트에서 반드시 멈춘다.
+description: 하나의 GitHub 이슈를 대상으로 "시그니처 확정 → 테스트 시나리오 도출"을 순서대로 처리한다. `/test-scenarios {이슈번호}`로 실행한다. 이슈의 함수 시그니처·에러 케이스·컴포넌트 Props 타입을 먼저 확정하고, 그걸 기반으로 정상/경계/예외 테스트 시나리오를 뽑아 `docs/features/{기능}/issue-{N}.md`에 기록한 뒤 GitHub AC와 대조한다. "테스트 시나리오", "시그니처 확정", "test scenario", "이슈 시나리오 도출", "AC 커버리지", "/test-scenarios" 관련 요청이면 명시적으로 '스킬'을 언급하지 않아도 반드시 사용한다. 구현 코드도 테스트 코드도 작성하지 않는다(그건 이후 TDD 단계). 두 번의 승인 게이트에서 반드시 멈춘다.
 ---
 
 # 이슈 단위 테스트 시나리오 도출
@@ -8,7 +8,16 @@ description: 하나의 GitHub 이슈를 대상으로 "시그니처 확정 → �
 하나의 GitHub 이슈를 **"시그니처 확정 → 테스트 시나리오 도출"** 순서로 처리한다. 산출물은 시나리오까지이며, **여기서 나온 시나리오를 씨앗으로 다음 단계에서 TDD(Red→Green→Refactor)로 테스트 코드를 구현**한다.
 
 - **입력**: 이슈 번호 `$ARGUMENTS` (예: `/test-scenarios 1`)
-- **산출물**: `docs/features/tag/issue-{N}.md` (상단=시그니처, 하단=시나리오)
+- **산출물**: `docs/features/{기능}/issue-{N}.md` (상단=시그니처, 하단=시나리오)
+
+## `{기능}` 디렉터리 찾기
+
+문서 경로의 `{기능}`은 고정값이 아니다. 이슈 번호에서 다음 순서로 해석한다 — **추측해서 쓰면 다음 단계가 그 파일을 못 찾는다.**
+
+1. `ls docs/features/*/issue-{N}.md` — 이미 있으면 그 디렉터리다(이어서 하는 단계는 거의 여기서 끝난다).
+2. 없으면 현재 브랜치에서 유추한다. `feature/tag-filter` → `docs/features/tag-filter/`.
+3. 그래도 못 찾으면 `grep -l "#{N}" docs/features/*/issue.md` 로 이슈 분해 문서에서 역추적한다.
+4. 끝내 확정되지 않으면 **사용자에게 묻는다.** 새 디렉터리를 임의로 만들지 않는다.
 
 ## 이 스킬의 두 가지 금지선
 
@@ -45,7 +54,7 @@ gh issue view $ARGUMENTS --repo mongilteacher/ccwork
 아래 세 소스를 **모두** 참고해 이슈가 요구하는 시그니처를 확정한다:
 
 1. **GitHub 이슈 내용** — `gh issue view $ARGUMENTS --repo <repo>` (설명 + AC)
-2. **`docs/features/tag/prd.md`** — ADR로 확정된 데이터 구조·계층 책임·타입 결정
+2. **`docs/features/{기능}/prd.md`** — ADR로 확정된 데이터 구조·계층 책임·타입 결정
 3. **코드베이스** — 확장할 실제 파일(`src/api/notes.ts`, `src/context/NotesContext.tsx`, `src/components/*`, `src/domain/*`)
 
 확정할 것:
@@ -79,7 +88,7 @@ gh issue view $ARGUMENTS --repo mongilteacher/ccwork
 
 ### 3단계 — 시그니처를 파일 상단에 기록
 
-승인된 시그니처를 `docs/features/tag/issue-{N}.md`의 **상단**에 기록한다(파일이 없으면 생성). 예:
+승인된 시그니처를 `docs/features/{기능}/issue-{N}.md`의 **상단**에 기록한다(파일이 없으면 생성). 예:
 
 ```markdown
 # Issue #{N} — {이슈 제목}
@@ -129,7 +138,7 @@ onChange: (tags: string[]) => void;
 
 ### 5단계 — 시나리오를 파일 하단에 추가
 
-도출한 시나리오를 `docs/features/tag/issue-{N}.md`의 **하단**에 `## 테스트 시나리오` 섹션으로 추가한다. 정상/경계/예외로 묶어 나열한다.
+도출한 시나리오를 `docs/features/{기능}/issue-{N}.md`의 **하단**에 `## 테스트 시나리오` 섹션으로 추가한다. 정상/경계/예외로 묶어 나열한다.
 
 ### 6단계 — AC와 대조 (커버리지 확인)
 
@@ -157,7 +166,7 @@ gh issue view $ARGUMENTS --repo <repo>
 
 ## 산출물 최종 형태
 
-`docs/features/tag/issue-{N}.md` 한 파일:
+`docs/features/{기능}/issue-{N}.md` 한 파일:
 
 ```
 # Issue #{N} — {제목}

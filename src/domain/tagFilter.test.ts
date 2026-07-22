@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { countTags, isHighlighted } from './tagFilter';
+import { countTags, isHighlighted, resolveSelectedTag, toggleSelectedTag } from './tagFilter';
 import { Note } from '../types/note';
 
 // 테스트 대상은 tags뿐이므로 나머지 필드는 고정값으로 채운다
@@ -131,5 +131,99 @@ describe('isHighlighted', () => {
   // 예외
   it('should return false when 선택 태그가 노트 태그의 부분 문자열이다', () => {
     expect(isHighlighted(note('1', ['회의록']), '회의')).toBe(false);
+  });
+});
+
+// TF-3 (#14) — 필터에서 빠져나오는 두 경로.
+// 1) 사용자가 직접: 같은 칩 재클릭 → 해제 (toggleSelectedTag)
+// 2) 저절로: 태그 목록에서 사라진 선택 태그는 선택되지 않은 것으로 본다 (resolveSelectedTag, ADR-3)
+describe('toggleSelectedTag', () => {
+  // 정상
+  it('should return null when clicked가 current와 같은 태그다', () => {
+    expect(toggleSelectedTag('회의', '회의')).toBe(null);
+  });
+
+  it('should return clicked when current가 다른 태그다', () => {
+    expect(toggleSelectedTag('회의', '팀')).toBe('팀');
+  });
+
+  it('should return clicked when current가 null이다', () => {
+    expect(toggleSelectedTag(null, '회의')).toBe('회의');
+  });
+
+  // 경계
+  it('should return null when clicked와 current가 대소문자만 다르다', () => {
+    expect(toggleSelectedTag('React', 'react')).toBe(null);
+    expect(toggleSelectedTag('react', 'React')).toBe(null);
+  });
+
+  it('should return null when current에 앞뒤 공백이 있고 정규화하면 clicked와 같다', () => {
+    expect(toggleSelectedTag(' 회의 ', '회의')).toBe(null);
+  });
+
+  it('should return null when clicked와 current가 NFC/NFD 표기만 다르다', () => {
+    const nfc = '회의'.normalize('NFC');
+    const nfd = '회의'.normalize('NFD');
+
+    expect(toggleSelectedTag(nfd, nfc)).toBe(null);
+    expect(toggleSelectedTag(nfc, nfd)).toBe(null);
+  });
+
+  // 예외
+  it('should return clicked when clicked가 current의 부분 문자열 관계다', () => {
+    // 완전 일치만 해제 — 부분 일치는 갈아타기다
+    expect(toggleSelectedTag('회의', '회의록')).toBe('회의록');
+  });
+
+  it('should return null when clicked가 정규화 후 빈 값이다', () => {
+    expect(toggleSelectedTag('회의', '   ')).toBe(null);
+    expect(toggleSelectedTag(null, '   ')).toBe(null);
+  });
+});
+
+describe('resolveSelectedTag', () => {
+  // 정상
+  it('should return 선택 태그 when 그 태그를 가진 노트가 있다', () => {
+    const notes = [note('1', ['회의']), note('2', ['팀'])];
+
+    expect(resolveSelectedTag(notes, '회의')).toBe('회의');
+  });
+
+  it('should return 목록의 표기 태그 when selectedTag와 표기가 대소문자만 다르다', () => {
+    const notes = [note('1', ['React'])];
+
+    expect(resolveSelectedTag(notes, 'react')).toBe('React');
+  });
+
+  // 경계
+  it('should return null when selectedTag가 null이다', () => {
+    expect(resolveSelectedTag([note('1', ['회의'])], null)).toBe(null);
+  });
+
+  it('should return null when notes가 빈 배열이다', () => {
+    expect(resolveSelectedTag([], '회의')).toBe(null);
+  });
+
+  it('should return null when selectedTag가 정규화 후 빈 문자열이다', () => {
+    expect(resolveSelectedTag([note('1', ['회의'])], '   ')).toBe(null);
+  });
+
+  it('should return 선택 태그 when 그 태그를 가진 노트가 3개 중 2개로 줄었다', () => {
+    // 하나가 빠져도 목록에 남아 있으면 선택은 유지된다 (AC 4)
+    const notes = [note('1', ['회의']), note('2', ['회의']), note('3', [])];
+
+    expect(resolveSelectedTag(notes, '회의')).toBe('회의');
+  });
+
+  // 예외
+  it('should return null when 어떤 노트도 갖고 있지 않은 태그가 selectedTag로 남아 있다', () => {
+    // 자동 해제의 실체 — state는 그대로여도 파생값이 null이 된다 (ADR-3)
+    const notes = [note('1', ['팀']), note('2', ['책'])];
+
+    expect(resolveSelectedTag(notes, '사라진태그')).toBe(null);
+  });
+
+  it('should return null when selectedTag가 다른 태그의 부분 문자열일 뿐이다', () => {
+    expect(resolveSelectedTag([note('1', ['회의록'])], '회의')).toBe(null);
   });
 });

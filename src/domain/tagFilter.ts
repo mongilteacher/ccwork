@@ -4,6 +4,11 @@
 import { Note } from '../types/note';
 import { normalizeTag } from './tag';
 
+// 태그 동일성 키 — normalizeTag 후 소문자(ADR-4). 이 모듈 안에서만 쓰는 헬퍼다.
+function tagKey(raw: string): string {
+  return normalizeTag(raw).toLowerCase();
+}
+
 export interface TagCount {
   tag: string; // 표기 태그 — 먼저 등장한 표기 (ADR-4)
   count: number; // 그 태그를 가진 노트 수
@@ -39,8 +44,31 @@ export function countTags(notes: Note[]): TagCount[] {
 export function isHighlighted(note: Note, selectedTag: string | null): boolean {
   if (selectedTag === null) return false;
 
-  const key = normalizeTag(selectedTag).toLowerCase();
+  const key = tagKey(selectedTag);
   if (key === '') return false; // 공백만 남으면 전체 보기와 같다
 
-  return note.tags.some((t) => normalizeTag(t).toLowerCase() === key);
+  return note.tags.some((t) => tagKey(t) === key);
+}
+
+// TF-3 범위: 칩 클릭 결과를 계산한다. 같은 태그를 다시 누르면 해제(null), 다른 태그면 갈아탄다.
+// 동일성 기준은 countTags·isHighlighted와 같다(normalizeTag 후 소문자 완전 일치, ADR-4).
+export function toggleSelectedTag(current: string | null, clicked: string): string | null {
+  const clickedKey = tagKey(clicked);
+  if (clickedKey === '') return null; // 빈 태그는 전체 보기와 같다
+
+  if (current === null) return clicked;
+
+  return tagKey(current) === clickedKey ? null : clicked;
+}
+
+// TF-3 범위(ADR-3): 선택 태그의 자동 해제를 state 동기화가 아니라 파생값으로 계산한다.
+// 태그 목록(countTags 결과)에 없는 선택 태그는 선택되지 않은 것으로 본다.
+export function resolveSelectedTag(notes: Note[], selectedTag: string | null): string | null {
+  if (selectedTag === null) return null;
+
+  const key = tagKey(selectedTag);
+  if (key === '') return null;
+
+  const found = countTags(notes).find((t) => tagKey(t.tag) === key);
+  return found ? found.tag : null; // 목록의 표기 태그를 돌려준다
 }

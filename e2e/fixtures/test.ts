@@ -6,6 +6,9 @@ const API = 'http://localhost:3001';
 type Fixtures = {
   // 고유 제목 생성기. 만든 제목을 자동 추적해 테스트 종료 후 삭제한다.
   uniqueTitle: (label: string) => string;
+  // 고유 태그 생성기. 태그 칩은 db 전체 집계라 다른 노트와 충돌하면 카운트가 흔들린다.
+  // uniqueTitle 결과는 MAX_TAG_LENGTH(20자)를 넘어 태그로 재사용할 수 없어 별도로 둔다.
+  uniqueTag: (label: string) => string;
 };
 
 export const test = base.extend<Fixtures>({
@@ -37,6 +40,20 @@ export const test = base.extend<Fixtures>({
     } finally {
       await ctx.dispose();
     }
+  },
+
+  // 20자 이하 고유 태그. 태그 자체는 노트에만 붙으므로 정리는 uniqueTitle의 teardown이 함께 처리한다.
+  // 길이 예산: label(권장 3자 이하) + '-' + 36진수 타임스탬프(8자) + 36진수 난수(3자) ≤ 15자.
+  uniqueTag: async ({}, use) => {
+    const make = (label: string) => {
+      const stamp = Date.now().toString(36); // 8자
+      const rand = Math.floor(Math.random() * 46656)
+        .toString(36)
+        .padStart(3, '0'); // 3자
+      return `${label}-${stamp}${rand}`;
+    };
+
+    await use(make);
   },
 });
 

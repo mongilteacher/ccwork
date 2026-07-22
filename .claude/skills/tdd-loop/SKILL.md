@@ -33,8 +33,12 @@ CLAUDE.md의 「TDD 이슈 사이클」을 사람이 매번 손으로 이어붙�
 ### 0-1. 이슈를 읽는다
 
 ```bash
-gh issue view $ARGUMENTS
+gh issue view $ARGUMENTS --repo mongilteacher/ccwork
 ```
+
+**`--repo`를 반드시 붙인다.** 이 저장소에는 `origin`(mongilteacher/ccwork)과 `upstream`(원본) 두 리모트가 있어서, 생략하면 gh가 upstream을 골라 **번호는 같지만 전혀 다른 이슈**를 읽는다. 조용히 잘못된 AC로 7단계를 도는 것이 이 가드가 막으려는 사고다. 같은 이유로 이 스킬에서 부르는 모든 `gh issue`·`gh pr` 명령에 `--repo`를 붙인다.
+
+(`gh repo set-default mongilteacher/ccwork`를 한 번 실행해 두면 생략해도 안전해지지만, 스킬은 그 설정에 기대지 않는다 — 새로 클론한 사람에게는 설정이 없다.)
 
 본문과 **Acceptance Criteria**를 확인한다. 이슈가 없거나 접근이 안 되면 여기서 중단한다 — 이후 모든 단계가 AC를 기준으로 돌아가므로 AC 없이는 시작할 수 없다.
 
@@ -112,7 +116,7 @@ git checkout -b feat/<issue-slug>
 - **PR 본문에 `Closes #$ARGUMENTS`** — 머지되면 이슈가 자동으로 닫힌다
 - PR 생성 후 **이슈에 PR 링크를 코멘트**로 남긴다:
   ```bash
-  gh issue comment $ARGUMENTS --body "PR: <생성된 PR URL>"
+  gh issue comment $ARGUMENTS --repo mongilteacher/ccwork --body "PR: <생성된 PR URL>"
   ```
 
 커밋은 commitlint를 통과해야 한다(제목 `<type>: <한국어 제목>`, 빈 줄, **본문 내용 2줄 이상, 각 줄 100자 이하**). 훅에 걸려 커밋이 거절되면 메시지를 고쳐 다시 시도한다 — `--no-verify`로 우회하지 않는다.

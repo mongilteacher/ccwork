@@ -8,6 +8,10 @@ import { NoteEditor } from './components/NoteEditor';
 function App() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  // TF-2는 "다른 태그로 갈아타기"만 한다. 같은 칩 재클릭 토글은 TF-3.
+  const handleSelectTag = (tag: string) => setSelectedTag(tag);
 
   const handleSelectNote = (id: string) => {
     setSelectedNoteId(id);
@@ -30,8 +34,12 @@ function App() {
         onNewNote={handleNewNote}
         sidebar={
           <>
-            <TagFilterBar />
-            <NoteList selectedNoteId={selectedNoteId} onSelect={handleSelectNote} />
+            <TagFilterBar selectedTag={selectedTag} onSelectTag={handleSelectTag} />
+            <NoteList
+              selectedNoteId={selectedNoteId}
+              selectedTag={selectedTag}
+              onSelect={handleSelectNote}
+            />
           </>
         }
         main={

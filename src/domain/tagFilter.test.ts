@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { countTags } from './tagFilter';
+import { countTags, isHighlighted } from './tagFilter';
 import { Note } from '../types/note';
 
 // 테스트 대상은 tags뿐이므로 나머지 필드는 고정값으로 채운다
@@ -75,5 +75,61 @@ describe('countTags', () => {
     const notes = [note('1', [nfc]), note('2', [nfd])];
 
     expect(countTags(notes)).toEqual([{ tag: nfc, count: 2 }]);
+  });
+});
+
+// TF-2 (#13) — 선택 태그를 가진 노트인지 판정. 동일성 기준은 countTags와 같다(ADR-4).
+describe('isHighlighted', () => {
+  // 정상
+  it('should return true when 노트가 선택 태그를 그대로 갖고 있다', () => {
+    expect(isHighlighted(note('1', ['회의']), '회의')).toBe(true);
+  });
+
+  it('should return false when 노트가 선택 태그를 갖고 있지 않다', () => {
+    expect(isHighlighted(note('1', ['팀']), '회의')).toBe(false);
+  });
+
+  it('should return true when 선택 태그가 노트의 여러 태그 중 하나와 일치한다', () => {
+    expect(isHighlighted(note('1', ['팀', '회의', '책']), '회의')).toBe(true);
+  });
+
+  it('should return true when 선택 태그와 노트 태그가 대소문자만 다르다', () => {
+    expect(isHighlighted(note('1', ['React']), 'react')).toBe(true);
+    expect(isHighlighted(note('1', ['react']), 'React')).toBe(true);
+  });
+
+  // 경계
+  it('should return false when selectedTag가 null이다', () => {
+    expect(isHighlighted(note('1', ['회의']), null)).toBe(false);
+  });
+
+  it('should return false when 노트의 tags가 빈 배열이다', () => {
+    expect(isHighlighted(note('1', []), '회의')).toBe(false);
+  });
+
+  it('should return false when selectedTag가 정규화 후 빈 문자열이다', () => {
+    expect(isHighlighted(note('1', ['회의']), '   ')).toBe(false);
+  });
+
+  it('should return true when 선택 태그와 노트 태그가 NFC/NFD 표기만 다르다', () => {
+    const nfc = '회의'.normalize('NFC');
+    const nfd = '회의'.normalize('NFD');
+
+    expect(isHighlighted(note('1', [nfd]), nfc)).toBe(true);
+    expect(isHighlighted(note('1', [nfc]), nfd)).toBe(true);
+  });
+
+  it('should return true when selectedTag에 앞뒤 공백이 있다', () => {
+    expect(isHighlighted(note('1', ['회의']), ' 회의 ')).toBe(true);
+  });
+
+  it('should return false when 태그 목록에 더는 없는 태그가 selectedTag로 남아 있다', () => {
+    // TF-3의 자동 해제가 없어도 판정 자체는 자연히 false다 (ADR-3)
+    expect(isHighlighted(note('1', ['팀']), '사라진태그')).toBe(false);
+  });
+
+  // 예외
+  it('should return false when 선택 태그가 노트 태그의 부분 문자열이다', () => {
+    expect(isHighlighted(note('1', ['회의록']), '회의')).toBe(false);
   });
 });

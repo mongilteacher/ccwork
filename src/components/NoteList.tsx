@@ -1,12 +1,14 @@
 import { useNotes } from '../context/NotesContext';
+import { isHighlighted } from '../domain/tagFilter';
 import { NoteItem } from './NoteItem';
 
 interface NoteListProps {
   selectedNoteId: string | null;
+  selectedTag?: string | null; // 강조 판정용 — 목록에서 노트를 걸러내지는 않는다
   onSelect: (id: string) => void;
 }
 
-export function NoteList({ selectedNoteId, onSelect }: NoteListProps) {
+export function NoteList({ selectedNoteId, selectedTag = null, onSelect }: NoteListProps) {
   const { notes, loading, error, deleteNote } = useNotes();
 
   const handleDelete = async (id: string) => {
@@ -39,6 +41,7 @@ export function NoteList({ selectedNoteId, onSelect }: NoteListProps) {
           key={note.id}
           note={note}
           isSelected={note.id === selectedNoteId}
+          isHighlighted={isHighlighted(note, selectedTag)}
           onSelect={onSelect}
           onDelete={handleDelete}
         />

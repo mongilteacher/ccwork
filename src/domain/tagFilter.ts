@@ -33,3 +33,14 @@ export function countTags(notes: Note[]): TagCount[] {
 
   return [...counts.values()].sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
 }
+
+// TF-2 범위: 선택 태그를 가진 노트인지 판정한다.
+// 동일성 기준은 countTags와 같다 — normalizeTag 후 소문자 완전 일치(ADR-4). 부분 일치는 제외.
+export function isHighlighted(note: Note, selectedTag: string | null): boolean {
+  if (selectedTag === null) return false;
+
+  const key = normalizeTag(selectedTag).toLowerCase();
+  if (key === '') return false; // 공백만 남으면 전체 보기와 같다
+
+  return note.tags.some((t) => normalizeTag(t).toLowerCase() === key);
+}

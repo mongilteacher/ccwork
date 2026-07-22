@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NotesProvider } from './context/NotesContext';
 import { Layout } from './components/Layout';
 import { NoteList } from './components/NoteList';
+import { TagFilterBar } from './components/TagFilterBar';
 import { NoteEditor } from './components/NoteEditor';
 
 function App() {
@@ -27,7 +28,12 @@ function App() {
     <NotesProvider>
       <Layout
         onNewNote={handleNewNote}
-        sidebar={<NoteList selectedNoteId={selectedNoteId} onSelect={handleSelectNote} />}
+        sidebar={
+          <>
+            <TagFilterBar />
+            <NoteList selectedNoteId={selectedNoteId} onSelect={handleSelectNote} />
+          </>
+        }
         main={
           <NoteEditor selectedNoteId={selectedNoteId} isCreating={isCreating} onDone={handleDone} />
         }

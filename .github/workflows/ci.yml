@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      # npm run lint는 --fix가 붙어 있어 CI에서 위반을 조용히 고쳐버린다.
+      # 검사만 하도록 eslint를 직접 호출한다.
+      - name: 린트 검사
+        run: npx eslint .
+
+      - name: 타입 검사
+        run: npm run typecheck
+
+      - name: 의존성 취약점 점검
+        run: npm audit --audit-level=moderate
+
+      - name: 단위 테스트
+        run: npm test

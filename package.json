@@ -3,6 +3,9 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"vite\" \"json-server --watch db.json --port 3001\"",
+    "dev:e2e": "concurrently \"vite\" \"npm run server:e2e\"",
+    "server:e2e": "node e2e/seed-server.mjs",
+    "test:e2e": "playwright test",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "server": "json-server --watch db.json --port 3001",
@@ -11,6 +14,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -30,6 +34,7 @@
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
     "@eslint/js": "^9.21.0",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -37,6 +42,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.2.7",
     "concurrently": "^9.1.2",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.2.0",

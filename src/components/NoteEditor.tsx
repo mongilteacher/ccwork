@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNotes } from '../context/NotesContext';
+import { TagInput } from './TagInput';
 
 interface NoteEditorProps {
   selectedNoteId: string | null;
@@ -11,20 +12,35 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
   const { notes, createNote, updateNote } = useNotes();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
 
-  // 선택된 노트가 바뀔 때 폼 동기화
-  useEffect(() => {
+  // 폼을 원본 소스로 맞춘다: 선택된 노트 값, 또는 생성 중이면 빈 값
+  const syncForm = () => {
     if (selectedNote) {
       setTitle(selectedNote.title);
       setContent(selectedNote.content);
+      setTags(selectedNote.tags);
     } else if (isCreating) {
       setTitle('');
       setContent('');
+      setTags([]);
     }
+  };
+
+  // 선택된 노트가 바뀔 때 폼 동기화
+  useEffect(() => {
+    syncForm();
   }, [selectedNoteId, isCreating]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 취소 — 미저장 변경(태그 삭제 포함)을 원본으로 되돌린 뒤 편집 종료
+  // 서버엔 미전송이므로 로컬 state만 selectedNote 값으로 재동기화한다
+  const handleCancel = () => {
+    syncForm();
+    onDone();
+  };
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -35,9 +51,9 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
     setSaving(true);
     try {
       if (isCreating) {
-        await createNote(title, content);
+        await createNote(title, content, tags);
       } else if (selectedNoteId) {
-        await updateNote(selectedNoteId, { title, content });
+        await updateNote(selectedNoteId, { title, content, tags });
       }
       onDone();
     } catch (e) {
@@ -78,6 +94,11 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
       {/* 구분선 */}
       <div className="h-px bg-border mb-4" />
 
+      {/* 태그 칩 + 입력 */}
+      <div className="mb-4">
+        <TagInput tags={tags} onChange={setTags} />
+      </div>
+
       {/* 내용 입력 */}
       <textarea
         value={content}
@@ -97,7 +118,7 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
           {saving ? '저장 중...' : '저장'}
         </button>
         <button
-          onClick={onDone}
+          onClick={handleCancel}
           className="px-5 py-2 rounded-xl text-sm font-semibold text-muted-foreground bg-muted hover:bg-border transition-colors cursor-pointer"
         >
           취소

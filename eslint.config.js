@@ -22,4 +22,14 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  {
+    // E2E(Playwright)는 React가 아니다. fixture 관용구가 React 규칙에 오탐한다:
+    // - `async ({}, use)` 빈 패턴은 fixture 시그니처 관용구다
+    // - Playwright의 `use`를 React 19의 `use` 훅으로 오인한다
+    files: ['e2e/**/*.ts'],
+    rules: {
+      'no-empty-pattern': 'off',
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
 );

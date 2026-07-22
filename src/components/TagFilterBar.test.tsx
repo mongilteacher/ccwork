@@ -176,3 +176,23 @@ describe('TagFilterBar 선택 상태', () => {
     expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
 });
+
+// TF-3 (#14) — 자동 해제의 사이드바 쪽 결과.
+// 선택 태그를 가진 노트가 전부 사라지면 칩 자체가 목록에서 빠진다(집계 기준, ADR-3).
+describe('TagFilterBar 선택 태그 소멸', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // 경계
+  it('should 그 칩을 렌더하지 않는다 when 선택 태그를 가진 노트가 하나도 남지 않았다', async () => {
+    vi.mocked(api.fetchNotes).mockResolvedValue([note('1', ['팀'])]);
+
+    render(<TagFilterBar selectedTag="회의" onSelectTag={() => {}} />, {
+      wrapper: ({ children }: { children: ReactNode }) => <NotesProvider>{children}</NotesProvider>,
+    });
+
+    expect(await screen.findByRole('button', { name: /팀/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /회의/ })).not.toBeInTheDocument();
+  });
+});

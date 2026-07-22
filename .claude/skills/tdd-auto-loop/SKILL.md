@@ -224,6 +224,18 @@ lsof -nP -iTCP:5173 -sTCP:LISTEN; lsof -nP -iTCP:3001 -sTCP:LISTEN   # dev 서�
 - **7단계** — 커밋은 commitlint를 통과해야 한다(제목 `<type>: <한국어 제목>`, 빈 줄, **본문 2줄 이상 · 각 줄 100자 이하**). `--no-verify`는 절대 쓰지 않는다 — 훅을 우회하는 건 자율 주행이 스스로 안전장치를 끄는 것이다. 거절되면 메시지를 고쳐 1회 재시도하고, 또 거절되면 STOP.
   PR은 `--base {0단계에서 확인한 feature/<spec>}`, 본문에 `Closes #$ARGUMENTS`를 포함한다. 생성 후 이슈에 PR 링크를 코멘트한다.
 
+  **`Closes`만으로는 이슈가 닫히지 않는다.** GitHub은 PR이 _기본 브랜치로_ 머지될 때만 자동 클로즈하는데 이 사이클의 base는 `feature/<spec>`이다. 완주 리포트에 "머지 후 `gh issue close`가 필요하다"를 명시한다 — 자율 주행은 머지하지 않으므로 여기서 닫지는 않는다.
+
+### 7단계 진입 직전 — 포트를 다시 확인한다
+
+```bash
+lsof -nP -iTCP:5173 -sTCP:LISTEN; lsof -nP -iTCP:3001 -sTCP:LISTEN
+```
+
+0단계에서 이미 봤지만 **한 번 더 본다.** 주행은 10~20분이 걸리고, 그 사이 사람이 `npm run dev`를 띄우면 E2E가 `reuseExistingServer` 때문에 실제 `db.json`에 붙어 데이터를 오염시킨다. 0단계 점검은 시작 시점의 사진일 뿐이라 이 창을 못 막는다.
+
+점유돼 있으면 **STOP**한다. 사람이 쓰고 있을 수 있는 프로세스를 자율 주행이 말없이 죽이지 않는다 — 무엇이 떠 있는지(`ps -o command= -p <pid>`) 보여주고 사람이 정하게 한다.
+
 ---
 
 ## 완주 리포트

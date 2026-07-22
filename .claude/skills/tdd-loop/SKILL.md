@@ -113,7 +113,7 @@ git checkout -b feat/<issue-slug>
 **7단계(PR)** — `create-pr`에는 자체 E2E 게이트가 있어 실패하면 PR을 만들지 않고 멈춘다. 그 판단을 존중하고 우회하지 않는다. PR 생성 시 컨테이너가 챙길 세 가지:
 
 - **base 브랜치는 0-3에서 확인한 `feature/<spec>`** — `main`이 아니다
-- **PR 본문에 `Closes #$ARGUMENTS`** — 머지되면 이슈가 자동으로 닫힌다
+- **PR 본문에 `Closes #$ARGUMENTS`** — PR과 이슈를 연결한다. 단 **이것만으로는 이슈가 닫히지 않는다**: GitHub은 PR이 _기본 브랜치(main)로_ 머지될 때만 자동 클로즈하는데, 이 사이클의 base는 `feature/<spec>`이다. 머지 후 `gh issue close $ARGUMENTS --repo mongilteacher/ccwork`가 따로 필요하다는 것을 개발자에게 알린다
 - PR 생성 후 **이슈에 PR 링크를 코멘트**로 남긴다:
   ```bash
   gh issue comment $ARGUMENTS --repo mongilteacher/ccwork --body "PR: <생성된 PR URL>"
